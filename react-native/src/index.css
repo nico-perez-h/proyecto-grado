@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.parameter-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.parameter-card:hover {
+  transform: translateY(-2px);
+}
+
+.chart-container {
+  height: 200px;
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    height: 180px;
+  }
+}
+
+.water-bg {
+  background: linear-gradient(180deg, rgba(224, 242, 254, 0.3) 0%, rgba(186, 230, 253, 0.1) 100%);
+}
+
+.dark .water-bg {
+  background: linear-gradient(180deg, rgba(8, 47, 73, 0.3) 0%, rgba(12, 74, 110, 0.1) 100%);
+}
+
+.device-control {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.device-control:hover {
+  transform: scale(1.02);
+}
+
+.device-control:active {
+  transform: scale(0.98);
+}

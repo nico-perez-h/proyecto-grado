@@ -1,0 +1,15 @@
+# Dependencias de Node
+node_modules/
+
+# Expo (React Native)
+.expo/
+
+# Configuración de VS Code
+.vscode/
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

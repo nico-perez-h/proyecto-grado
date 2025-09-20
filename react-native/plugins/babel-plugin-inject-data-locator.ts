@@ -138,9 +138,16 @@ const createPluginLogic = (babel: {types: typeof BabelTypes}, options: CustomPlu
 
           openingElement.attributes.push(dataLocatorAttr);
 
-          console.log(
-            `[inject-data-locator-original-source] Added data-locator (${mapped ? "original" : "generated"}): ${locatorValue} to ${elementName} in ${filename}${mapped ? ` (gen L${start.line}:C${start.column})` : `(L${start.line}:C${start.column})`}`,
-          );
+          //console.log(
+          //  `[inject-data-locator-original-source] Added data-locator (${mapped ? "original" : "generated"}): ${locatorValue} to ${elementName} in ${filename}${mapped ? ` (gen L${start.line}:C${start.column})` : `(L${start.line}:C${start.column})`}`,
+          //);
+
+          //Este comentario es sacado de Documentacion
+          /* 💡 Opcional: si en algún momento quieres depurar solo ciertos componentes, puedes reemplazar el console.log por algo condicional, por ejemplo:
+
+              if (process.env.NODE_ENV === "development" && elementName === "App") {
+                    console.log(...);
+              }*/
         }
       },
     },

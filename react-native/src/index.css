@@ -1,49 +1,73 @@
+/* Importamos la fuente "Inter" desde Google Fonts, con diferentes grosores (300 a 700). */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Directivas de Tailwind CSS para incluir los estilos base, componentes y utilidades. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos generales para el body (todo el documento). */
 body {
+  /* Definimos la fuente por defecto: Inter, y si no está disponible, una fuente sans-serif. */
   font-family: 'Inter', sans-serif;
+  /* Mejoramos el renderizado de la tipografía en navegadores WebKit (Chrome, Safari). */
   -webkit-font-smoothing: antialiased;
+  /* Mejoramos el renderizado de la tipografía en Firefox en macOS. */
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Clase para tarjetas de parámetros. 
+   Le da una transición suave a todos los cambios de estilo (ej. hover). */
 .parameter-card {
   transition: all 0.2s ease-in-out;
 }
 
+/* Cuando pasamos el cursor sobre una tarjeta, se levanta ligeramente hacia arriba. */
 .parameter-card:hover {
   transform: translateY(-2px);
 }
 
+/* Contenedor de gráficos, con altura fija de 200px. */
 .chart-container {
   height: 200px;
 }
 
+/* Ajuste responsivo: en pantallas pequeñas (máx 640px) la altura del gráfico se reduce. */
 @media (max-width: 640px) {
   .chart-container {
     height: 180px;
   }
 }
 
+/* Fondo con efecto degradado suave (versión clara). */
 .water-bg {
-  background: linear-gradient(180deg, rgba(224, 242, 254, 0.3) 0%, rgba(186, 230, 253, 0.1) 100%);
+  background: linear-gradient(
+    180deg, 
+    rgba(224, 242, 254, 0.3) 0%,   /* Azul muy claro con 30% de opacidad en la parte superior */
+    rgba(186, 230, 253, 0.1) 100%  /* Azul más intenso con 10% de opacidad en la parte inferior */
+  );
 }
 
+/* Fondo con efecto degradado suave (versión oscura, cuando hay .dark en el html/body). */
 .dark .water-bg {
-  background: linear-gradient(180deg, rgba(8, 47, 73, 0.3) 0%, rgba(12, 74, 110, 0.1) 100%);
+  background: linear-gradient(
+    180deg, 
+    rgba(8, 47, 73, 0.3) 0%,   /* Azul oscuro con 30% de opacidad arriba */
+    rgba(12, 74, 110, 0.1) 100% /* Azul profundo con 10% de opacidad abajo */
+  );
 }
 
+/* Clase para controles de dispositivos: animaciones más fluidas. */
 .device-control {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Cuando se pasa el cursor encima, el control crece un 2%. */
 .device-control:hover {
   transform: scale(1.02);
 }
 
+/* Cuando se hace clic, el control se encoge un poco (98%). */
 .device-control:active {
   transform: scale(0.98);
 }

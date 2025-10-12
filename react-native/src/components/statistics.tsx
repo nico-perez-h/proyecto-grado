@@ -16,36 +16,36 @@ interface DataPoint {
   temperature: number;
   ph: number;
   ammonia: number;
-  nitrate: number;
+  dureza: number;
 }
 
 export const Statistics = () => {
   const [selected, setSelected] = React.useState("week");
   
   const weekData: DataPoint[] = [
-    { date: "Lun", temperature: 24.2, ph: 6.8, ammonia: 0.25, nitrate: 5 },
-    { date: "Mar", temperature: 24.5, ph: 6.9, ammonia: 0.2, nitrate: 5 },
-    { date: "Mié", temperature: 24.8, ph: 7.0, ammonia: 0.15, nitrate: 10 },
-    { date: "Jue", temperature: 25.0, ph: 7.1, ammonia: 0.1, nitrate: 10 },
-    { date: "Vie", temperature: 24.7, ph: 7.0, ammonia: 0.25, nitrate: 15 },
-    { date: "Sáb", temperature: 24.5, ph: 6.9, ammonia: 0.3, nitrate: 15 },
-    { date: "Dom", temperature: 24.3, ph: 6.8, ammonia: 0.25, nitrate: 10 },
+    { date: "Lun", temperature: 24.2, ph: 6.8, ammonia: 0.25, dureza: 5 },
+    { date: "Mar", temperature: 24.5, ph: 6.9, ammonia: 0.2, dureza: 5 },
+    { date: "Mié", temperature: 24.8, ph: 7.0, ammonia: 0.15, dureza: 10 },
+    { date: "Jue", temperature: 25.0, ph: 7.1, ammonia: 0.1, dureza: 10 },
+    { date: "Vie", temperature: 24.7, ph: 7.0, ammonia: 0.25, dureza: 15 },
+    { date: "Sáb", temperature: 24.5, ph: 6.9, ammonia: 0.3, dureza: 15 },
+    { date: "Dom", temperature: 24.3, ph: 6.8, ammonia: 0.25, dureza: 10 },
   ];
   
   const monthData: DataPoint[] = [
-    { date: "Sem 1", temperature: 24.5, ph: 6.8, ammonia: 0.2, nitrate: 5 },
-    { date: "Sem 2", temperature: 24.7, ph: 7.0, ammonia: 0.15, nitrate: 10 },
-    { date: "Sem 3", temperature: 24.3, ph: 6.9, ammonia: 0.25, nitrate: 15 },
-    { date: "Sem 4", temperature: 24.5, ph: 6.8, ammonia: 0.2, nitrate: 10 },
+    { date: "Sem 1", temperature: 24.5, ph: 6.8, ammonia: 0.2, dureza: 5 },
+    { date: "Sem 2", temperature: 24.7, ph: 7.0, ammonia: 0.15, dureza: 10 },
+    { date: "Sem 3", temperature: 24.3, ph: 6.9, ammonia: 0.25, dureza: 15 },
+    { date: "Sem 4", temperature: 24.5, ph: 6.8, ammonia: 0.2, dureza: 10 },
   ];
   
   const yearData: DataPoint[] = [
-    { date: "Ene", temperature: 24.0, ph: 6.7, ammonia: 0.3, nitrate: 5 },
-    { date: "Feb", temperature: 24.2, ph: 6.8, ammonia: 0.25, nitrate: 10 },
-    { date: "Mar", temperature: 24.5, ph: 6.9, ammonia: 0.2, nitrate: 15 },
-    { date: "Abr", temperature: 24.8, ph: 7.0, ammonia: 0.15, nitrate: 10 },
-    { date: "May", temperature: 25.0, ph: 7.1, ammonia: 0.1, nitrate: 5 },
-    { date: "Jun", temperature: 25.2, ph: 7.0, ammonia: 0.15, nitrate: 10 },
+    { date: "Ene", temperature: 24.0, ph: 6.7, ammonia: 0.3, dureza: 5 },
+    { date: "Feb", temperature: 24.2, ph: 6.8, ammonia: 0.25, dureza: 10 },
+    { date: "Mar", temperature: 24.5, ph: 6.9, ammonia: 0.2, dureza: 15 },
+    { date: "Abr", temperature: 24.8, ph: 7.0, ammonia: 0.15, dureza: 10 },
+    { date: "May", temperature: 25.0, ph: 7.1, ammonia: 0.1, dureza: 5 },
+    { date: "Jun", temperature: 25.2, ph: 7.0, ammonia: 0.15, dureza: 10 },
   ];
   
   const getData = () => {
@@ -57,7 +57,7 @@ export const Statistics = () => {
     }
   };
   
-  const [selectedParameter, setSelectedParameter] = React.useState("all");
+  const [selectedParameter, setSelectedParameter] = React.useState("temperature");
   
   return (
     <div className="space-y-6">
@@ -88,11 +88,11 @@ export const Statistics = () => {
             size="sm"
             className="mb-6"
           >
-            <Tab key="all" title="Todos" />
+            {/* <Tab key="all" title="Todos" /> */}
             <Tab key="temperature" title="Temperatura" />
             <Tab key="ph" title="pH" />
             <Tab key="ammonia" title="Amonio" />
-            <Tab key="nitrate" title="Nitratos" />
+            <Tab key="dureza" title="Dureza" />
           </Tabs>
           
           <div className="h-64 md:h-80">
@@ -131,12 +131,12 @@ export const Statistics = () => {
                   hide={selectedParameter !== "all" && selectedParameter !== "ammonia"}
                 />
                 <YAxis 
-                  yAxisId="nitrate"
+                  yAxisId="dureza"
                   orientation="right"
                   axisLine={false}
                   tickLine={false}
                   domain={[0, 20]}
-                  hide={selectedParameter !== "all" && selectedParameter !== "nitrate"}
+                  hide={selectedParameter !== "all" && selectedParameter !== "dureza"}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -180,12 +180,12 @@ export const Statistics = () => {
                     strokeWidth={2}
                   />
                 )}
-                {(selectedParameter === "all" || selectedParameter === "nitrate") && (
+                {(selectedParameter === "all" || selectedParameter === "dureza") && (
                   <Line 
-                    yAxisId="nitrate"
+                    yAxisId="dureza"
                     type="monotone" 
-                    dataKey="nitrate" 
-                    name="Nitratos (ppm)"
+                    dataKey="dureza" 
+                    name="Dureza (ppm)"
                     stroke="hsl(var(--heroui-danger-500))" 
                     activeDot={{ r: 6 }} 
                     strokeWidth={2}
@@ -233,8 +233,8 @@ export const Statistics = () => {
             
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">Nitratos</span>
-                <span className="text-sm text-foreground-500">0 - 20 ppm</span>
+                <span className="text-sm font-medium">Dureza</span>
+                <span className="text-sm text-foreground-500">0 - 10 dGH</span>
               </div>
               <div className="h-2 bg-default-100 rounded-full overflow-hidden">
                 <div className="h-full bg-danger-500 rounded-full" style={{ width: '75%' }}></div>

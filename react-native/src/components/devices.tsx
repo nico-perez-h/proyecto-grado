@@ -1,5 +1,14 @@
 import React from "react";
-import { Card, CardBody, Button, Switch, Input, Slider, Tabs, Tab } from "@heroui/react";
+import {
+  Card,
+  CardBody,
+  Button,
+  Switch,
+  Input,
+  Slider,
+  Tabs,
+  Tab,
+} from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 
@@ -31,22 +40,8 @@ export const Devices = () => {
         isScheduled: true,
         startTime: "08:00",
         endTime: "20:00",
-        days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
-      }
-    },
-    {
-      id: 2,
-      name: "Iluminación nocturna",
-      icon: "lucide:moon",
-      isActive: false,
-      type: "light",
-      intensity: 30,
-      schedule: {
-        isScheduled: true,
-        startTime: "20:00",
-        endTime: "23:00",
-        days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
-      }
+        days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+      },
     },
     {
       id: 3,
@@ -58,81 +53,64 @@ export const Devices = () => {
         isScheduled: false,
         startTime: "",
         endTime: "",
-        days: []
-      }
+        days: [],
+      },
     },
-    {
-      id: 4,
-      name: "Calentador",
-      icon: "lucide:flame",
-      isActive: false,
-      type: "heater",
-      schedule: {
-        isScheduled: false,
-        startTime: "",
-        endTime: "",
-        days: []
-      }
-    },
-    {
-      id: 5,
-      name: "Aireador",
-      icon: "lucide:wind",
-      isActive: true,
-      type: "air",
-      schedule: {
-        isScheduled: true,
-        startTime: "10:00",
-        endTime: "22:00",
-        days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
-      }
-    }
   ]);
 
   const [selectedTab, setSelectedTab] = React.useState("all");
-  
+
   const toggleDevice = (id: number) => {
-    setDevices(devices.map(device => 
-      device.id === id ? { ...device, isActive: !device.isActive } : device
-    ));
+    setDevices(
+      devices.map((device) =>
+        device.id === id ? { ...device, isActive: !device.isActive } : device
+      )
+    );
   };
-  
+
   const updateIntensity = (id: number, value: number) => {
-    setDevices(devices.map(device => 
-      device.id === id ? { ...device, intensity: value } : device
-    ));
+    setDevices(
+      devices.map((device) =>
+        device.id === id ? { ...device, intensity: value } : device
+      )
+    );
   };
-  
+
   const toggleSchedule = (id: number) => {
-    setDevices(devices.map(device => 
-      device.id === id ? { 
-        ...device, 
-        schedule: { 
-          ...device.schedule, 
-          isScheduled: !device.schedule.isScheduled 
-        } 
-      } : device
-    ));
+    setDevices(
+      devices.map((device) =>
+        device.id === id
+          ? {
+              ...device,
+              schedule: {
+                ...device.schedule,
+                isScheduled: !device.schedule.isScheduled,
+              },
+            }
+          : device
+      )
+    );
   };
-  
-  const filteredDevices = selectedTab === "all" 
-    ? devices 
-    : devices.filter(device => device.type === selectedTab);
+
+  const filteredDevices =
+    selectedTab === "all"
+      ? devices
+      : devices.filter((device) => device.type === selectedTab);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Dispositivos</h2>
-        <Button 
+        {/*  <Button 
           color="primary" 
           variant="light"
           endContent={<Icon icon="lucide:plus" />}
         >
           Añadir
-        </Button>
+        </Button> */}
       </div>
-      
-      <Tabs 
+
+      {/* <Tabs 
         aria-label="Filtrar dispositivos"
         selectedKey={selectedTab}
         onSelectionChange={setSelectedTab as any}
@@ -144,8 +122,8 @@ export const Devices = () => {
         <Tab key="filter" title="Filtros" />
         <Tab key="heater" title="Calentadores" />
         <Tab key="air" title="Aireadores" />
-      </Tabs>
-      
+      </Tabs> */}
+
       <div className="space-y-4">
         {filteredDevices.map((device, index) => (
           <motion.div
@@ -158,35 +136,45 @@ export const Devices = () => {
               <CardBody className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${device.isActive ? 'bg-primary-100 text-primary-500' : 'bg-default-100 text-default-500'}`}>
+                    <div
+                      className={`p-2 rounded-full ${
+                        device.isActive
+                          ? "bg-primary-100 text-primary-500"
+                          : "bg-default-100 text-default-500"
+                      }`}
+                    >
                       <Icon icon={device.icon} className="text-xl" />
                     </div>
                     <div>
                       <h3 className="font-medium">{device.name}</h3>
                       <p className="text-xs text-foreground-500">
-                        {device.schedule.isScheduled 
-                          ? `Programado: ${device.schedule.startTime} - ${device.schedule.endTime}` 
-                          : 'Sin programación'}
+                        {device.schedule.isScheduled
+                          ? `Programado: ${device.schedule.startTime} - ${device.schedule.endTime}`
+                          : "Sin programación"}
                       </p>
                     </div>
                   </div>
-                  <Switch 
+                  <Switch
                     isSelected={device.isActive}
                     onValueChange={() => toggleDevice(device.id)}
                     color="primary"
                   />
                 </div>
-                
-                {device.intensity !== undefined && (
+
+                {/* {device.intensity !== undefined && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm">Intensidad</span>
-                      <span className="text-sm font-medium">{device.intensity}%</span>
+                      <span className="text-sm font-medium">
+                        {device.intensity}%
+                      </span>
                     </div>
-                    <Slider 
+                    <Slider
                       aria-label="Intensidad"
                       value={device.intensity}
-                      onChange={(value) => updateIntensity(device.id, value as number)}
+                      onChange={(value) =>
+                        updateIntensity(device.id, value as number)
+                      }
                       color="primary"
                       step={5}
                       showTooltip
@@ -194,14 +182,17 @@ export const Devices = () => {
                       isDisabled={!device.isActive}
                     />
                   </div>
-                )}
-                
+                )} */}
+
                 <div className="flex items-center justify-between pt-2 border-t border-divider">
                   <div className="flex items-center gap-2">
-                    <Icon icon="lucide:clock" className="text-sm text-foreground-500" />
+                    <Icon
+                      icon="lucide:clock"
+                      className="text-sm text-foreground-500"
+                    />
                     <span className="text-sm">Programación</span>
                   </div>
-                  <Switch 
+                  <Switch
                     isSelected={device.schedule.isScheduled}
                     onValueChange={() => toggleSchedule(device.id)}
                     size="sm"

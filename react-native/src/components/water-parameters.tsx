@@ -11,11 +11,18 @@ interface ParameterCardProps {
   info?: string;
 }
 
-const ParameterCard: React.FC<ParameterCardProps> = ({ icon, label, value, unit, status, info }) => {
+const ParameterCard: React.FC<ParameterCardProps> = ({
+  icon,
+  label,
+  value,
+  unit,
+  status,
+  info,
+}) => {
   const statusColors = {
     normal: "text-success-500",
     warning: "text-warning-500",
-    danger: "text-danger-500"
+    danger: "text-danger-500",
   };
 
   return (
@@ -26,18 +33,19 @@ const ParameterCard: React.FC<ParameterCardProps> = ({ icon, label, value, unit,
             <Icon icon={icon} className={`${statusColors[status]}`} />
             <span className="text-sm font-medium">{label}</span>
           </div>
-          {info && (
+          {/* {info && (
             <Tooltip content={info}>
               <button className="text-foreground-400">
                 <Icon icon="lucide:info" className="text-sm" />
               </button>
             </Tooltip>
-          )}
+          )} */}
         </div>
         <div className="flex items-end gap-1">
           <span className="text-xl font-semibold">{value}</span>
           <span className="text-xs text-foreground-500 mb-1">{unit}</span>
         </div>
+        <p className="text-[10px] opacity-60">{info}</p>
       </CardBody>
     </Card>
   );
@@ -57,7 +65,7 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 24.5,
         unit: "°C",
         status: "normal" as const,
-        info: "Rango ideal: 23-26°C"
+        info: "Rango ideal: 23-26°C",
       },
       {
         icon: "lucide:activity",
@@ -65,15 +73,7 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 6.8,
         unit: "",
         status: "normal" as const,
-        info: "Rango ideal: 6.5-7.5"
-      },
-      {
-        icon: "lucide:flask-conical",
-        label: "Amonio",
-        value: 0.25,
-        unit: "ppm",
-        status: "warning" as const,
-        info: "Ideal: <0.25 ppm"
+        info: "Rango ideal: 6.5-7.5",
       },
       {
         icon: "lucide:droplets",
@@ -81,8 +81,48 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 8,
         unit: "dGH",
         status: "normal" as const,
-        info: "Rango ideal: 4-8 dGH"
-      }
+        info: "Rango ideal: 4-8 dGH",
+      },
+      {
+        icon: "lucide:flask-conical",
+        label: "Amonio",
+        value: 0.25,
+        unit: "ppm",
+        status: "warning" as const,
+        info: "Ideal: < 0.25 ppm",
+      },
+      {
+        icon: "lucide:triangle-alert",
+        label: "Nitritos (No2)",
+        value: 0,
+        unit: "ppm",
+        status: "warning" as const,
+        info: "Ideal: 0 ppm",
+      },
+      {
+        icon: "lucide:beaker",
+        label: "Nitratos(No3)",
+        value: 20,
+        unit: "ppm",
+        status: "warning" as const,
+        info: "Ideal: < 40 ppm",
+      },
+      {
+        icon: "lucide:waves",
+        label: "Alcalinidad",
+        value: 8,
+        unit: "dKH",
+        status: "warning" as const,
+        info: "Rango ideal: 3-8 dGH",
+      },
+      {
+        icon: "lucide:scale",
+        label: "TDS",
+        value: 250,
+        unit: "ppm",
+        status: "warning" as const,
+        info: "Rango ideal: 150-300 ppm",
+      },
     ],
     2: [
       {
@@ -91,7 +131,7 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 25.2,
         unit: "°C",
         status: "normal" as const,
-        info: "Rango ideal: 24-28°C"
+        info: "Rango ideal: 24-28°C",
       },
       {
         icon: "lucide:activity",
@@ -99,7 +139,7 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 7.2,
         unit: "",
         status: "normal" as const,
-        info: "Rango ideal: 6.8-7.5"
+        info: "Rango ideal: 6.8-7.5",
       },
       {
         icon: "lucide:flask-conical",
@@ -107,7 +147,7 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 0.1,
         unit: "ppm",
         status: "normal" as const,
-        info: "Ideal: <0.25 ppm"
+        info: "Ideal: <0.25 ppm",
       },
       {
         icon: "lucide:droplets",
@@ -115,12 +155,14 @@ export const WaterParameters: React.FC<WaterParametersProps> = ({ tankId }) => {
         value: 15,
         unit: "ppm",
         status: "normal" as const,
-        info: "Rango ideal: 10-30 ppm"
-      }
-    ]
+        info: "Rango ideal: 10-30 ppm",
+      },
+    ],
   };
 
-  const parameters = parametersByTank[tankId as keyof typeof parametersByTank] || parametersByTank[1];
+  const parameters =
+    parametersByTank[tankId as keyof typeof parametersByTank] ||
+    parametersByTank[1];
 
   return (
     <div className="space-y-4">

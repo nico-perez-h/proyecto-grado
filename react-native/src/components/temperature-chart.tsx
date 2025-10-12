@@ -28,7 +28,6 @@ export const TemperatureChart: React.FC<TemperatureChartProps> = ({ tankId = 1 }
       { time: "12:00", temperature: 24.8 },
       { time: "16:00", temperature: 25.1 },
       { time: "20:00", temperature: 24.7 },
-      { time: "Ahora", temperature: 24.5 },
     ],
     2: [
       { time: "00:00", temperature: 25.0 },
@@ -37,7 +36,6 @@ export const TemperatureChart: React.FC<TemperatureChartProps> = ({ tankId = 1 }
       { time: "12:00", temperature: 25.5 },
       { time: "16:00", temperature: 25.7 },
       { time: "20:00", temperature: 25.4 },
-      { time: "Ahora", temperature: 25.2 },
     ]
   };
 

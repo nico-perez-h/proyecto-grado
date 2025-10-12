@@ -6,7 +6,7 @@ export default function Index() {
       style={{
         flex: 1,
       }}
-      source={{ uri: `https://aqua-monitor-4629c.web.app/?v=${Date.now()}` }}
+      source={{ uri: `http://localhost:5173/?v=${Date.now()}` }}
       cacheEnabled={false}
       incognito={true}
       javaScriptEnabled={true}

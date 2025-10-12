@@ -1,6 +1,6 @@
 // Importamos HeroUIProvider y ToastProvider desde la librería @heroui/react.
 // Estos son proveedores de contexto que permiten usar los componentes y notificaciones de la librería en toda la app.
-import {HeroUIProvider, ToastProvider} from "@heroui/react";
+import { HeroUIProvider, ToastProvider } from "@heroui/react";
 
 // Importamos React, que es necesario para crear componentes y usar JSX.
 import React from "react";
@@ -13,6 +13,8 @@ import App from "./App.tsx";
 
 // Importamos los estilos globales de la aplicación desde index.css.
 import "./index.css";
+import { UserContextProvider } from "./context/userContext.tsx";
+import { ThemeContextProvider } from "./context/themeContext.tsx";
 
 // Creamos el punto de entrada de la aplicación.
 // Buscamos el elemento con id="root" en el HTML (generalmente en index.html) y ahí montamos nuestra app de React.
@@ -26,8 +28,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       {/* Aquí renderizamos el contenido principal de la app. */}
       <main className="text-foreground bg-background">
         {/* Renderizamos el componente App, que es donde empieza la lógica principal de la app. */}
-        <App />
+        <ThemeContextProvider>
+          <UserContextProvider>
+            <App />
+          </UserContextProvider>
+        </ThemeContextProvider>
       </main>
     </HeroUIProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

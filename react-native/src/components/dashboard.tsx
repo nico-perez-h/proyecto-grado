@@ -57,7 +57,7 @@ export const Dashboard = ({ selectedTank = null }) => {
         </Dropdown>
       </div>
       
-      <Card className="water-bg overflow-hidden">
+      {/* <Card className="water-bg overflow-hidden">
         <CardBody className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -72,7 +72,7 @@ export const Dashboard = ({ selectedTank = null }) => {
             className="h-2"
           />
         </CardBody>
-      </Card>
+      </Card> */}
       
       <WaterParameters tankId={currentTank.id} />
       

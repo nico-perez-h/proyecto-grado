@@ -1,207 +1,179 @@
-import React from "react";
-import {
-  Card,
-  CardBody,
-  Button,
-  Switch,
-  Input,
-  Slider,
-  Tabs,
-  Tab,
-} from "@heroui/react";
+import { Card, CardBody, Switch } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
-
-interface Device {
-  id: number;
-  name: string;
-  icon: string;
-  isActive: boolean;
-  type: string;
-  schedule: {
-    isScheduled: boolean;
-    startTime: string;
-    endTime: string;
-    days: string[];
-  };
-  intensity?: number;
-}
+import { useUserContext } from "../context/userContext";
+import { supabase } from "../lib/supabaseClient";
 
 export const Devices = () => {
-  const [devices, setDevices] = React.useState<Device[]>([
-    {
-      id: 1,
-      name: "Iluminación principal",
-      icon: "lucide:sun",
-      isActive: true,
-      type: "light",
-      intensity: 80,
-      schedule: {
-        isScheduled: true,
-        startTime: "08:00",
-        endTime: "20:00",
-        days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-      },
-    },
-    {
-      id: 3,
-      name: "Filtro principal",
-      icon: "lucide:filter",
-      isActive: true,
-      type: "filter",
-      schedule: {
-        isScheduled: false,
-        startTime: "",
-        endTime: "",
-        days: [],
-      },
-    },
-  ]);
+  const { acuarioSeleccionado, modificarAcuarioSeleccionado } =
+    useUserContext();
 
-  const [selectedTab, setSelectedTab] = React.useState("all");
+  const toggleLuz = async () => {
+    // Actualizar el estado local
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      luz: !acuarioSeleccionado.luz,
+    });
 
-  const toggleDevice = (id: number) => {
-    setDevices(
-      devices.map((device) =>
-        device.id === id ? { ...device, isActive: !device.isActive } : device
-      )
-    );
+    // Aquí iría la lógica para activar/desactivar la luz en el backend
+    await supabase
+      .from("acuarios")
+      .update({ luz: !acuarioSeleccionado.luz })
+      .eq("id", acuarioSeleccionado.id);
   };
 
-  const updateIntensity = (id: number, value: number) => {
-    setDevices(
-      devices.map((device) =>
-        device.id === id ? { ...device, intensity: value } : device
-      )
-    );
+  const toggleLuzProgramada = async () => {
+    // Actualizar el estado local
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      luz_programada: !acuarioSeleccionado.luz_programada,
+    });
+
+    // Aquí iría la lógica para activar/desactivar la luz_programada en el backend
+    await supabase
+      .from("acuarios")
+      .update({ luz_programada: !acuarioSeleccionado.luz_programada })
+      .eq("id", acuarioSeleccionado.id);
   };
 
-  const toggleSchedule = (id: number) => {
-    setDevices(
-      devices.map((device) =>
-        device.id === id
-          ? {
-              ...device,
-              schedule: {
-                ...device.schedule,
-                isScheduled: !device.schedule.isScheduled,
-              },
-            }
-          : device
-      )
-    );
+  const toggleFiltro = async () => {
+    // Actualizar el estado local
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      filtro: !acuarioSeleccionado.filtro,
+    });
+
+    // Aquí iría la lógica para activar/desactivar la filtro en el backend
+    await supabase
+      .from("acuarios")
+      .update({ filtro: !acuarioSeleccionado.filtro })
+      .eq("id", acuarioSeleccionado.id);
   };
 
-  const filteredDevices =
-    selectedTab === "all"
-      ? devices
-      : devices.filter((device) => device.type === selectedTab);
+  const toggleFiltroProgramado = async () => {
+    // Actualizar el estado local
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      filtro_programado: !acuarioSeleccionado.filtro_programado,
+    });
+
+    // Aquí iría la lógica para activar/desactivar la filtro_programado en el backend
+    await supabase
+      .from("acuarios")
+      .update({ filtro_programado: !acuarioSeleccionado.filtro_programado })
+      .eq("id", acuarioSeleccionado.id);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Dispositivos</h2>
-        {/*  <Button 
-          color="primary" 
-          variant="light"
-          endContent={<Icon icon="lucide:plus" />}
-        >
-          Añadir
-        </Button> */}
       </div>
 
-      {/* <Tabs 
-        aria-label="Filtrar dispositivos"
-        selectedKey={selectedTab}
-        onSelectionChange={setSelectedTab as any}
-        color="primary"
-        variant="light"
-      >
-        <Tab key="all" title="Todos" />
-        <Tab key="light" title="Iluminación" />
-        <Tab key="filter" title="Filtros" />
-        <Tab key="heater" title="Calentadores" />
-        <Tab key="air" title="Aireadores" />
-      </Tabs> */}
-
       <div className="space-y-4">
-        {filteredDevices.map((device, index) => (
-          <motion.div
-            key={device.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <Card className={device.isActive ? "border-primary" : ""}>
-              <CardBody className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2 rounded-full ${
-                        device.isActive
-                          ? "bg-primary-100 text-primary-500"
-                          : "bg-default-100 text-default-500"
-                      }`}
-                    >
-                      <Icon icon={device.icon} className="text-xl" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{device.name}</h3>
-                      <p className="text-xs text-foreground-500">
-                        {device.schedule.isScheduled
-                          ? `Programado: ${device.schedule.startTime} - ${device.schedule.endTime}`
-                          : "Sin programación"}
-                      </p>
-                    </div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0 * 0.1 }}
+        >
+          <Card className={acuarioSeleccionado.luz ? "border-primary" : ""}>
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2 rounded-full ${
+                      acuarioSeleccionado.luz
+                        ? "bg-primary-100 text-primary-500"
+                        : "bg-default-100 text-default-500"
+                    }`}
+                  >
+                    <Icon icon="lucide:sun" className="text-xl" />
                   </div>
-                  <Switch
-                    isSelected={device.isActive}
-                    onValueChange={() => toggleDevice(device.id)}
-                    color="primary"
-                  />
+                  <div>
+                    <h3 className="font-medium">Luz</h3>
+                    <p className="text-xs text-foreground-500">
+                      {acuarioSeleccionado.luz_programada
+                        ? `Programado: ${acuarioSeleccionado.luz_inicio} - ${acuarioSeleccionado.luz_final}`
+                        : "Sin programación"}
+                    </p>
+                  </div>
                 </div>
+                <Switch
+                  isSelected={acuarioSeleccionado.luz}
+                  onValueChange={toggleLuz}
+                  color="primary"
+                />
+              </div>
 
-                {/* {device.intensity !== undefined && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm">Intensidad</span>
-                      <span className="text-sm font-medium">
-                        {device.intensity}%
-                      </span>
-                    </div>
-                    <Slider
-                      aria-label="Intensidad"
-                      value={device.intensity}
-                      onChange={(value) =>
-                        updateIntensity(device.id, value as number)
-                      }
-                      color="primary"
-                      step={5}
-                      showTooltip
-                      className={!device.isActive ? "opacity-50" : ""}
-                      isDisabled={!device.isActive}
-                    />
-                  </div>
-                )} */}
-
-                <div className="flex items-center justify-between pt-2 border-t border-divider">
-                  <div className="flex items-center gap-2">
-                    <Icon
-                      icon="lucide:clock"
-                      className="text-sm text-foreground-500"
-                    />
-                    <span className="text-sm">Programación</span>
-                  </div>
-                  <Switch
-                    isSelected={device.schedule.isScheduled}
-                    onValueChange={() => toggleSchedule(device.id)}
-                    size="sm"
+              <div className="flex items-center justify-between pt-2 border-t border-divider">
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="lucide:clock"
+                    className="text-sm text-foreground-500"
                   />
+                  <span className="text-sm">Programación</span>
                 </div>
-              </CardBody>
-            </Card>
-          </motion.div>
-        ))}
+                <Switch
+                  isSelected={acuarioSeleccionado.luz_programada}
+                  onValueChange={toggleLuzProgramada}
+                  size="sm"
+                />
+              </div>
+            </CardBody>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 1 * 0.1 }}
+        >
+          <Card className={acuarioSeleccionado.filtro ? "border-primary" : ""}>
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2 rounded-full ${
+                      acuarioSeleccionado.filtro
+                        ? "bg-primary-100 text-primary-500"
+                        : "bg-default-100 text-default-500"
+                    }`}
+                  >
+                    <Icon icon="lucide:sun" className="text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Filtro</h3>
+                    <p className="text-xs text-foreground-500">
+                      {acuarioSeleccionado.filtro_programado
+                        ? `Programado: ${acuarioSeleccionado.filtro_inicio} - ${acuarioSeleccionado.filtro_final}`
+                        : "Sin programación"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  isSelected={acuarioSeleccionado.filtro}
+                  onValueChange={toggleFiltro}
+                  color="primary"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-divider">
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="lucide:clock"
+                    className="text-sm text-foreground-500"
+                  />
+                  <span className="text-sm">Programación</span>
+                </div>
+                <Switch
+                  isSelected={acuarioSeleccionado.filtro_programado}
+                  onValueChange={toggleFiltroProgramado}
+                  size="sm"
+                />
+              </div>
+            </CardBody>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

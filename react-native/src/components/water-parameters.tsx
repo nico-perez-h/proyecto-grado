@@ -31,7 +31,7 @@ const ParameterCard: React.FC<ParameterCardProps> = ({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Icon icon={icon} className={`${statusColors[status]}`} />
-            <span className="text-sm font-medium">{label}</span>
+            <span className="text-sm font-mediusm">{label}</span>
           </div>
           {/* {info && (
             <Tooltip content={info}>

@@ -6,7 +6,10 @@ interface NavigationProps {
   onSelectionChange: (key: string) => void;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ selected, onSelectionChange }) => {
+export const Navigation: React.FC<NavigationProps> = ({
+  selected,
+  onSelectionChange,
+}) => {
   const navItems = [
     { key: "dashboard", label: "Inicio", icon: "lucide:layout-dashboard" },
     { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" },

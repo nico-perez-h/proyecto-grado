@@ -18,7 +18,8 @@ export default function App() {
   // Estado que guarda qué sección está seleccionada en la navegación
   const [selected, setSelected] = React.useState("dashboard");
 
-  const { user, setUser } = useUserContext();
+  const { user, setUser, setAcuarios, setAcuarioSeleccionadoId } =
+    useUserContext();
 
   // Estado que controla si se debe mostrar la pantalla de registro (Register) o de login
   const [showRegister, setShowRegister] = React.useState(false);
@@ -41,24 +42,37 @@ export default function App() {
 
   // Función que maneja el login (en este ejemplo solo cambia el estado)
   const handleLogin = async (email: string) => {
-    const { data, error } = await supabase
+    const { data, error: errorUser } = await supabase
       .from("usuarios")
       .select("*")
       .eq("email", email)
       .single();
 
-    if (error) {
-      alert("Error al obtener el usuario: " + error.message);
+    if (errorUser) {
+      alert("Error al obtener el usuario: " + errorUser.message);
+      return;
+    }
+
+    const { data: dataAcuarios, error: errorAcuarios } = await supabase
+      .from("acuarios")
+      .select("*")
+      .eq("id_usuario", data.id);
+
+    if (errorUser || dataAcuarios.length === 0) {
+      alert("Error al obtener los acuarios: " + errorAcuarios.message);
       return;
     }
 
     setUser(data);
+    setAcuarios(dataAcuarios);
+    setAcuarioSeleccionadoId(dataAcuarios[0].id);
     setAppTheme(data.oscuro ? "dark" : "light");
   };
 
   // Función para cerrar sesión
   const handleLogout = () => {
     setUser(null);
+    setAcuarios(null);
   };
 
   // Si todavía estamos cargando, mostramos la pantalla SplashScreen
@@ -89,10 +103,10 @@ export default function App() {
 
       {/* Contenido principal que cambia según la opción seleccionada */}
       <main className="container mx-auto px-4 pb-20 pt-4">
-        {selected === "dashboard" && <Dashboard />}
+        {selected === "dashboard" && <Dashboard setSelected={setSelected} />}
         {selected === "statistics" && <Statistics />}
         {selected === "devices" && <Devices />}
-        {selected === "settings" && <Settings />}
+        {selected === "settings" && <Settings setSelected={setSelected} />}
       </main>
 
       {/* Barra de navegación inferior para cambiar de sección */}

@@ -20,7 +20,7 @@ export const SplashScreen: React.FC = () => {
             className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full -z-10 w-16 h-16"
           />
         </div>
-        
+
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -29,7 +29,7 @@ export const SplashScreen: React.FC = () => {
         >
           AquaMonitor
         </motion.h1>
-        
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -46,9 +46,11 @@ export const SplashScreen: React.FC = () => {
           </div>
         </motion.div>
       </motion.div>
-      
+
       <div className="absolute bottom-8 text-center">
-        <p className="text-foreground-500 text-sm">Monitoreo inteligente para tu acuario</p>
+        <p className="text-foreground-500 text-sm">
+          Monitoreo inteligente para tu acuario
+        </p>
       </div>
     </div>
   );

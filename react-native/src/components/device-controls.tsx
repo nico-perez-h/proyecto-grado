@@ -2,6 +2,8 @@ import React from "react";
 import { Card, CardBody, Switch, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
+import { useUserContext } from "../context/userContext";
+import { supabase } from "../lib/supabaseClient";
 
 interface DeviceControlProps {
   icon: string;
@@ -16,7 +18,6 @@ const DeviceControl: React.FC<DeviceControlProps> = ({
   label,
   isActive,
   onToggle,
-  activeTime,
 }) => {
   return (
     <Card className={`device-control ${isActive ? "border-primary" : ""}`}>
@@ -34,11 +35,9 @@ const DeviceControl: React.FC<DeviceControlProps> = ({
             </div>
             <div>
               <p className="font-medium">{label}</p>
-              {activeTime && (
-                <p className="text-xs text-foreground-500">
-                  {isActive ? `Activo: ${activeTime}` : "Inactivo"}
-                </p>
-              )}
+              <p className="text-xs text-foreground-500">
+                {isActive ? `Activo` : "Inactivo"}
+              </p>
             </div>
           </div>
           <Switch
@@ -57,98 +56,69 @@ interface DeviceControlsProps {
   tankId?: number;
 }
 
-export const DeviceControls: React.FC<DeviceControlsProps> = ({
-  tankId = 1,
-}) => {
-  // Different devices based on tank ID
-  const devicesByTank = {
-    1: [
-      {
-        id: 1,
-        name: "Iluminación",
-        icon: "lucide:sun",
-        isActive: true,
-        activeTime: "6h 23m",
-      },
-      {
-        id: 2,
-        name: "Filtro",
-        icon: "lucide:filter",
-        isActive: true,
-        activeTime: "12h 05m",
-      },
-      /* { id: 4, name: "Aireador", icon: "lucide:wind", isActive: true, activeTime: "8h 15m" } */
-    ],
-    2: [
-      {
-        id: 1,
-        name: "Iluminación LED",
-        icon: "lucide:sun",
-        isActive: true,
-        activeTime: "8h 45m",
-      },
-      {
-        id: 2,
-        name: "Filtro Canister",
-        icon: "lucide:filter",
-        isActive: true,
-        activeTime: "24h 00m",
-      },
-    ],
+export const DeviceControls: React.FC<DeviceControlsProps> = () => {
+  const { acuarioSeleccionado, modificarAcuarioSeleccionado } =
+    useUserContext();
+
+  const toggleLuz = async () => {
+    // Actualizar el estado local
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      luz: !acuarioSeleccionado.luz,
+    });
+
+    // Aquí iría la lógica para activar/desactivar la luz en el backend
+    await supabase
+      .from("acuarios")
+      .update({ luz: !acuarioSeleccionado.luz })
+      .eq("id", acuarioSeleccionado.id);
   };
 
-  const [devices, setDevices] = React.useState(
-    devicesByTank[tankId as keyof typeof devicesByTank] || devicesByTank[1]
-  );
+  const toggleFiltro = async () => {
+    // Actualizar el estado local
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      filtro: !acuarioSeleccionado.filtro,
+    });
 
-  // Update devices when tankId changes
-  React.useEffect(() => {
-    setDevices(
-      devicesByTank[tankId as keyof typeof devicesByTank] || devicesByTank[1]
-    );
-  }, [tankId]);
-
-  const toggleDevice = (id: number) => {
-    setDevices(
-      devices.map((device) =>
-        device.id === id
-          ? {
-              ...device,
-              isActive: !device.isActive,
-              activeTime: !device.isActive ? "0m" : device.activeTime,
-            }
-          : device
-      )
-    );
+    // Aquí iría la lógica para activar/desactivar la filtro en el backend
+    await supabase
+      .from("acuarios")
+      .update({ filtro: !acuarioSeleccionado.filtro })
+      .eq("id", acuarioSeleccionado.id);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Dispositivos</h3>
-        <Tooltip content="Programar dispositivos">
-          <button className="text-primary">
-            <Icon icon="lucide:clock" />
-          </button>
-        </Tooltip>
       </div>
       <div className="space-y-3">
-        {devices.map((device) => (
-          <motion.div
-            key={device.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: device.id * 0.1 }}
-          >
-            <DeviceControl
-              icon={device.icon}
-              label={device.name}
-              isActive={device.isActive}
-              onToggle={() => toggleDevice(device.id)}
-              activeTime={device.activeTime}
-            />
-          </motion.div>
-        ))}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0 * 0.1 }}
+        >
+          <DeviceControl
+            icon="lucide:sun"
+            label="Luz"
+            isActive={acuarioSeleccionado.luz}
+            onToggle={toggleLuz}
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 1 * 0.1 }}
+        >
+          <DeviceControl
+            icon="lucide:filter"
+            label="Filtro"
+            isActive={acuarioSeleccionado.filtro}
+            onToggle={toggleFiltro}
+          />
+        </motion.div>
       </div>
     </div>
   );

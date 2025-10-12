@@ -1,5 +1,5 @@
 /* Importamos la fuente "Inter" desde Google Fonts, con diferentes grosores (300 a 700). */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 /* Directivas de Tailwind CSS para incluir los estilos base, componentes y utilidades. */
 @tailwind base;
@@ -9,7 +9,7 @@
 /* Estilos generales para el body (todo el documento). */
 body {
   /* Definimos la fuente por defecto: Inter, y si no está disponible, una fuente sans-serif. */
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   /* Mejoramos el renderizado de la tipografía en navegadores WebKit (Chrome, Safari). */
   -webkit-font-smoothing: antialiased;
   /* Mejoramos el renderizado de la tipografía en Firefox en macOS. */
@@ -42,18 +42,21 @@ body {
 /* Fondo con efecto degradado suave (versión clara). */
 .water-bg {
   background: linear-gradient(
-    180deg, 
-    rgba(224, 242, 254, 0.3) 0%,   /* Azul muy claro con 30% de opacidad en la parte superior */
-    rgba(186, 230, 253, 0.1) 100%  /* Azul más intenso con 10% de opacidad en la parte inferior */
+    180deg,
+    rgba(224, 242, 254, 0.3) 0%,
+    /* Azul muy claro con 30% de opacidad en la parte superior */
+      rgba(186, 230, 253, 0.1) 100%
+      /* Azul más intenso con 10% de opacidad en la parte inferior */
   );
 }
 
 /* Fondo con efecto degradado suave (versión oscura, cuando hay .dark en el html/body). */
 .dark .water-bg {
   background: linear-gradient(
-    180deg, 
-    rgba(8, 47, 73, 0.3) 0%,   /* Azul oscuro con 30% de opacidad arriba */
-    rgba(12, 74, 110, 0.1) 100% /* Azul profundo con 10% de opacidad abajo */
+    180deg,
+    rgba(8, 47, 73, 0.3) 0%,
+    /* Azul oscuro con 30% de opacidad arriba */ rgba(12, 74, 110, 0.1) 100%
+      /* Azul profundo con 10% de opacidad abajo */
   );
 }
 

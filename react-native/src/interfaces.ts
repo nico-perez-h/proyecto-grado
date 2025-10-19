@@ -26,3 +26,30 @@ export interface Acuario {
   filtro_inicio: string;
   filtro_final: string;
 }
+
+export interface Alerta {
+  id: number;
+  id_acuario: number;
+  titulo: string;
+  descripcion: string;
+  fecha_hora: string;
+}
+
+export interface Parametro {
+  id: number;
+  id_acuario: number;
+  tipo: ParametroTipo;
+  valor: number;
+  fecha_hora: string;
+}
+
+export enum ParametroTipo {
+  TEMPERATURA = "Temperatura",
+  PH = "PH",
+  DUREZA = "Dureza",
+  AMONIO = "Amonio",
+  NITRITOS = "Nitritos (No2)",
+  NITRATOS = "Nitratos (No3)",
+  ALCALINIDAD = "Alcalinidad",
+  TDS = "TDS",
+}

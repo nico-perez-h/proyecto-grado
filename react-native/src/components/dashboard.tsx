@@ -17,12 +17,12 @@ import { DeviceControls } from "./device-controls";
 import { Alerts } from "./alerts";
 import { useUserContext } from "../context/userContext";
 import { supabase } from "../lib/supabaseClient";
+import { ParametroTipo } from "../interfaces";
 
 interface Props {
   setSelected: (section: string) => void;
 }
 
-// Modificar la definición del componente para que tenga un valor por defecto para selectedTank
 export const Dashboard = ({ setSelected }: Props) => {
   const {
     user,
@@ -31,6 +31,9 @@ export const Dashboard = ({ setSelected }: Props) => {
     setAcuarioSeleccionadoId,
     anadirAcuario,
   } = useUserContext();
+  const [viewAlerts, setViewAlerts] = React.useState(false);
+  const [tipoSeleccionado, setTipoSeleccionado] =
+    React.useState<ParametroTipo | null>(null);
 
   // Definir los tanques disponibles
   const [tanks, setTanks] = React.useState([
@@ -49,7 +52,7 @@ export const Dashboard = ({ setSelected }: Props) => {
   ]);
 
   // Estado para el tanque seleccionado
-  const [selectedTankIndex, setSelectedTankIndex] = React.useState(0);
+  const [selectedTankIndex] = React.useState(0);
   const currentTank = tanks[selectedTankIndex];
 
   const handleNuevoAcuario = async () => {
@@ -69,84 +72,100 @@ export const Dashboard = ({ setSelected }: Props) => {
     setAcuarioSeleccionadoId(data.id);
   };
 
+  const showUI = !viewAlerts && !tipoSeleccionado;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">
-            {acuarioSeleccionado.nombre}
-          </h2>
-          <p className="text-foreground-500 text-sm">
-            Última actualización: hace 5 minutos
-          </p>
-        </div>
-        <Dropdown>
-          <DropdownTrigger>
-            <Button
-              variant="light"
-              color="primary"
-              endContent={<Icon icon="lucide:chevron-down" />}
-            >
-              Cambiar
-            </Button>
-          </DropdownTrigger>
-          <DropdownMenu aria-label="Seleccionar acuario">
-            <>
-              {acuarios.map((acuario, index) => (
-                <DropdownItem
-                  key={acuario.id}
-                  onPress={() => setAcuarioSeleccionadoId(acuario.id)}
-                  startContent={
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        acuario.id === acuarioSeleccionado.id
-                          ? "bg-primary"
-                          : "bg-default-300"
-                      }`}
-                    />
-                  }
+      {showUI && (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">
+                {acuarioSeleccionado.nombre}
+              </h2>
+              <p className="text-foreground-500 text-sm">
+                Última actualización: hace 5 minutos
+              </p>
+            </div>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  variant="light"
+                  color="primary"
+                  endContent={<Icon icon="lucide:chevron-down" />}
                 >
-                  {acuario.nombre}
-                </DropdownItem>
-              ))}
-              <DropdownItem
-                key="nuevo"
-                onPress={handleNuevoAcuario}
-                startContent={
-                  <div className={`w-2 h-2 rounded-full bg-gray-200`} />
-                }
+                  Cambiar
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Seleccionar acuario">
+                <>
+                  {acuarios.map((acuario, index) => (
+                    <DropdownItem
+                      key={acuario.id}
+                      onPress={() => setAcuarioSeleccionadoId(acuario.id)}
+                      startContent={
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            acuario.id === acuarioSeleccionado.id
+                              ? "bg-primary"
+                              : "bg-default-300"
+                          }`}
+                        />
+                      }
+                    >
+                      {acuario.nombre}
+                    </DropdownItem>
+                  ))}
+                  <DropdownItem
+                    key="nuevo"
+                    onPress={handleNuevoAcuario}
+                    startContent={
+                      <div className={`w-2 h-2 rounded-full bg-gray-200`} />
+                    }
+                  >
+                    Nuevo
+                  </DropdownItem>
+                </>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        </>
+      )}
+
+      {(showUI || tipoSeleccionado) && (
+        <WaterParameters
+          setTipoSeleccionado={setTipoSeleccionado}
+          tipoSeleccionado={tipoSeleccionado}
+        />
+      )}
+
+      {showUI && (
+        <>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Temperatura</h3>
+              <Button
+                variant="light"
+                size="sm"
+                endContent={<Icon icon="lucide:arrow-right" />}
+                onPress={() => setSelected("statistics")}
               >
-                Nuevo
-              </DropdownItem>
-            </>
-          </DropdownMenu>
-        </Dropdown>
-      </div>
+                Ver más
+              </Button>
+            </div>
+            <Card>
+              <CardBody className="p-4">
+                <TemperatureChart tankId={currentTank.id} />
+              </CardBody>
+            </Card>
+          </div>
+          <DeviceControls />
+        </>
+      )}
 
-      <WaterParameters tankId={currentTank.id} />
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Temperatura</h3>
-          <Button
-            variant="light"
-            size="sm"
-            endContent={<Icon icon="lucide:arrow-right" />}
-            onPress={() => setSelected("statistics")}
-          >
-            Ver más
-          </Button>
-        </div>
-        <Card>
-          <CardBody className="p-4">
-            <TemperatureChart tankId={currentTank.id} />
-          </CardBody>
-        </Card>
-      </div>
-
-      <DeviceControls />
-
-      <Alerts tankId={currentTank.id} />
+      {(showUI || viewAlerts) && (
+        <Alerts viewAlerts={viewAlerts} setViewAlerts={setViewAlerts} />
+      )}
     </div>
   );
 };

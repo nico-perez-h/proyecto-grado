@@ -1,67 +1,69 @@
-import React from "react";
-import { Card, CardBody, Button, Badge } from "@heroui/react";
+import { Button, Card, CardBody } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Alerta } from "../interfaces";
+import { supabase } from "../lib/supabaseClient";
+import { useUserContext } from "../context/userContext";
+import { timeAgo } from "../utils/timeAgo";
+import { formatFechaBonita } from "../utils/formatFechaBonita";
 
-interface AlertsProps {
-  tankId?: number;
+interface Props {
+  viewAlerts: boolean;
+  setViewAlerts: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-interface Alert {
-  id: number;
-  title: string;
-  message: string;
-  type: "warning" | "danger" | "info";
-  time: string;
-  isRead: boolean;
-}
+export const Alerts = ({ viewAlerts, setViewAlerts }: Props) => {
+  const { acuarioSeleccionado } = useUserContext();
+  const [alerts, setAlerts] = useState<Alerta[]>([]);
 
-export const Alerts: React.FC<AlertsProps> = ({ tankId = 1 }) => {
-  // Different alerts based on tank ID
-  const alertsByTank = {
-    1: [
-      {
-        id: 1,
-        title: "pH elevado",
-        message: "El pH del agua está por encima del rango recomendado (7.8).",
-        type: "warning" as const,
-        time: "Hace 35 minutos",
-        isRead: false,
-      },
-    ],
-    2: [
-      {
-        id: 1,
-        title: "Nivel de CO₂ bajo",
-        message:
-          "El nivel de CO₂ está por debajo del rango óptimo para plantas (8 ppm).",
-        type: "info" as const,
-        time: "Hace 20 minutos",
-        isRead: false,
-      },
-    ],
+  const fetchAlerts = async () => {
+    const { data, error } = await supabase
+      .from("alertas")
+      .select("*")
+      .filter("id_acuario", "eq", acuarioSeleccionado.id)
+      .order("fecha_hora", { ascending: false });
+
+    if (error) console.error(error);
+    else setAlerts(data);
   };
 
-  const [alerts, setAlerts] = React.useState(
-    alertsByTank[tankId as keyof typeof alertsByTank] || alertsByTank[1]
-  );
+  useEffect(() => {
+    fetchAlerts();
 
-  // Update alerts when tankId changes
-  React.useEffect(() => {
-    setAlerts(
-      alertsByTank[tankId as keyof typeof alertsByTank] || alertsByTank[1]
-    );
-  }, [tankId]);
+    const channel = supabase
+      .channel("public:alertas")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "alertas",
+        },
+        (payload) => {
+          const alert = payload.new as Alerta;
 
-  const markAsRead = (id: number) => {
-    setAlerts(
-      alerts.map((alert) =>
-        alert.id === id ? { ...alert, isRead: true } : alert
+          if (payload.eventType === "INSERT") {
+            if (alert.id_acuario !== acuarioSeleccionado.id) return;
+            setAlerts((prev) => [alert, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            if (alert.id_acuario !== acuarioSeleccionado.id) return;
+            setAlerts((prev) =>
+              prev.map((item) => (item.id === alert.id ? alert : item))
+            );
+          } else if (payload.eventType === "DELETE") {
+            setAlerts((prev) =>
+              prev.filter((item) => item.id !== payload.old.id)
+            );
+          }
+        }
       )
-    );
-  };
+      .subscribe();
 
-  const unreadCount = alerts.filter((alert) => !alert.isRead).length;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [acuarioSeleccionado.id]);
 
   const alertTypeIcons = {
     warning: "lucide:alert-triangle",
@@ -75,78 +77,67 @@ export const Alerts: React.FC<AlertsProps> = ({ tankId = 1 }) => {
     info: "primary",
   };
 
+  const handleDelete = async (id: number) => {
+    const { error } = await supabase.from("alertas").delete().eq("id", id);
+    if (error) {
+      console.error("Error al eliminar la alerta:", error);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">Alertas</h3>
-          {/* {unreadCount > 0 && (
-            <Badge
-              color="danger"
-              content={unreadCount}
-              shape="circle"
-              size="sm"
-            >
-              <span />
-            </Badge>
-          )} */}
         </div>
-        <Button variant="light" size="sm">
-          Ver historial
+        <Button
+          onPress={() => setViewAlerts((prev) => !prev)}
+          variant="light"
+          size="sm"
+        >
+          {viewAlerts ? "Ver dashboard" : "Ver historial"}
         </Button>
       </div>
 
       {alerts.length > 0 ? (
         <div className="space-y-3">
-          {alerts.map((alert, index) => (
-            <motion.div
-              key={alert.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Card
-                className={`${!alert.isRead ? "border-l-4" : ""}`}
-                style={{
-                  borderLeftColor: !alert.isRead
-                    ? `hsl(var(--heroui-${alertTypeColors[alert.type]}))`
-                    : "",
-                }}
+          {alerts
+            .filter((_, i) => !!viewAlerts || i <= 0)
+            .map((alert, index) => (
+              <motion.div
+                key={alert.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <CardBody className="p-4">
-                  <div className="flex gap-3">
-                    <div className={`mt-1 text-${alertTypeColors[alert.type]}`}>
-                      <Icon
-                        icon={alertTypeIcons[alert.type]}
-                        className="text-lg"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-medium">{alert.title}</h4>
-                        <span className="text-xs text-foreground-500">
-                          {alert.time}
-                        </span>
+                <Card>
+                  <CardBody className="p-4">
+                    <div className="flex gap-3">
+                      <div className={`mt-1 text-${alertTypeColors.warning}`}>
+                        <Icon
+                          icon={alertTypeIcons.warning}
+                          className="text-lg"
+                        />
                       </div>
-                      <p className="text-sm text-foreground-600 mb-3">
-                        {alert.message}
-                      </p>
-                      {/*  <div className="flex justify-end">
-                        <Button
-                          size="sm"
-                          variant="light"
-                          color={alertTypeColors[alert.type]}
-                          onPress={() => markAsRead(alert.id)}
-                        >
-                          {alert.isRead ? "Archivado" : "Marcar como leído"}
-                        </Button>
-                      </div> */}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-medium">{alert.titulo}</h4>
+                          <span className="text-xs text-foreground-500">
+                            {formatFechaBonita(alert.fecha_hora)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground-600 mb-3">
+                          {alert.descripcion}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </motion.div>
-          ))}
+                    <Button onPress={() => handleDelete(alert.id)}>
+                      Eliminar
+                    </Button>
+                  </CardBody>
+                </Card>
+              </motion.div>
+            ))}
         </div>
       ) : (
         <Card>

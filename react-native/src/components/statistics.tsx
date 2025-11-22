@@ -1,68 +1,88 @@
 import React from "react";
 import { Card, CardBody, Tabs, Tab } from "@heroui/react";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
+  Area,
+  AreaChart,
 } from "recharts";
+import { useParametersRealTime } from "../hooks/useParametersRealTime";
+import { ParametroTipo } from "../interfaces";
+import { useUserContext } from "../context/userContext";
 
 interface DataPoint {
-  date: string;
+  time: string;
   temperature: number;
-  ph: number;
-  ammonia: number;
-  dureza: number;
 }
 
+const chartColors: Record<ParametroTipo, string> = {
+  [ParametroTipo.TEMPERATURA]: "hsl(var(--heroui-primary-500))",
+  [ParametroTipo.PH]: "hsl(var(--heroui-secondary-500))",
+  [ParametroTipo.AMONIO]: "hsl(var(--heroui-warning-500))",
+  [ParametroTipo.DUREZA]: "hsl(var(--heroui-danger-500))",
+  [ParametroTipo.NITRITOS]: "hsl(var(--heroui-info-500))",
+  [ParametroTipo.NITRATOS]: "hsl(var(--heroui-success-500))",
+  [ParametroTipo.ALCALINIDAD]: "hsl(var(--heroui-purple-500))",
+  [ParametroTipo.TDS]: "hsl(var(--heroui-pink-500))",
+};
+
+const calculatePercentage = (
+  value: number,
+  min: number,
+  max: number
+): number => {
+  const percent = ((value - min) / (max - min)) * 100;
+  return Math.max(0, Math.min(percent, 100)); // garantiza que esté entre 0 y 100
+};
+
 export const Statistics = () => {
-  const [selected, setSelected] = React.useState("week");
-
-  const weekData: DataPoint[] = [
-    { date: "Lun", temperature: 24.2, ph: 6.8, ammonia: 0.25, dureza: 5 },
-    { date: "Mar", temperature: 24.5, ph: 6.9, ammonia: 0.2, dureza: 5 },
-    { date: "Mié", temperature: 24.8, ph: 7.0, ammonia: 0.15, dureza: 10 },
-    { date: "Jue", temperature: 25.0, ph: 7.1, ammonia: 0.1, dureza: 10 },
-    { date: "Vie", temperature: 24.7, ph: 7.0, ammonia: 0.25, dureza: 15 },
-    { date: "Sáb", temperature: 24.5, ph: 6.9, ammonia: 0.3, dureza: 15 },
-    { date: "Dom", temperature: 24.3, ph: 6.8, ammonia: 0.25, dureza: 10 },
-  ];
-
-  const monthData: DataPoint[] = [
-    { date: "Sem 1", temperature: 24.5, ph: 6.8, ammonia: 0.2, dureza: 5 },
-    { date: "Sem 2", temperature: 24.7, ph: 7.0, ammonia: 0.15, dureza: 10 },
-    { date: "Sem 3", temperature: 24.3, ph: 6.9, ammonia: 0.25, dureza: 15 },
-    { date: "Sem 4", temperature: 24.5, ph: 6.8, ammonia: 0.2, dureza: 10 },
-  ];
-
-  const yearData: DataPoint[] = [
-    { date: "Ene", temperature: 24.0, ph: 6.7, ammonia: 0.3, dureza: 5 },
-    { date: "Feb", temperature: 24.2, ph: 6.8, ammonia: 0.25, dureza: 10 },
-    { date: "Mar", temperature: 24.5, ph: 6.9, ammonia: 0.2, dureza: 15 },
-    { date: "Abr", temperature: 24.8, ph: 7.0, ammonia: 0.15, dureza: 10 },
-    { date: "May", temperature: 25.0, ph: 7.1, ammonia: 0.1, dureza: 5 },
-    { date: "Jun", temperature: 25.2, ph: 7.0, ammonia: 0.15, dureza: 10 },
-  ];
-
-  const getData = () => {
-    switch (selected) {
-      case "week":
-        return weekData;
-      case "month":
-        return monthData;
-      case "year":
-        return yearData;
-      default:
-        return weekData;
-    }
-  };
-
   const [selectedParameter, setSelectedParameter] =
-    React.useState("temperature");
+    React.useState<ParametroTipo>(ParametroTipo.TEMPERATURA);
+
+  const { acuarioSeleccionado } = useUserContext();
+  const { filteredParameters, parameters } =
+    useParametersRealTime(selectedParameter);
+
+  const reversed = [...filteredParameters].reverse();
+
+  const data: DataPoint[] = reversed.map((param) => {
+    const date = new Date(param.fecha_hora);
+    date.setHours(date.getHours() - 4);
+    return {
+      time: date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      temperature: param.valor,
+    };
+  });
+
+  const lastTemp = parameters
+    .filter((p) => p.tipo === ParametroTipo.TEMPERATURA)
+    .sort(
+      (a, b) =>
+        new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime()
+    )[0]?.valor;
+  const lastTempPercent = calculatePercentage(
+    lastTemp ?? acuarioSeleccionado.temp_min,
+    acuarioSeleccionado.temp_min,
+    acuarioSeleccionado.temp_max
+  );
+
+  const lastPh = parameters
+    .filter((p) => p.tipo === ParametroTipo.PH)
+    .sort(
+      (a, b) =>
+        new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime()
+    )[0]?.valor;
+  const lastPhPercent = calculatePercentage(
+    lastPh ?? acuarioSeleccionado.ph_min,
+    acuarioSeleccionado.ph_min,
+    acuarioSeleccionado.ph_max
+  );
 
   return (
     <div className="space-y-6">
@@ -70,20 +90,6 @@ export const Statistics = () => {
 
       <Card>
         <CardBody className="p-4">
-          <Tabs
-            aria-label="Periodo de tiempo"
-            selectedKey={selected}
-            onSelectionChange={setSelected as any}
-            variant="light"
-            color="primary"
-            size="sm"
-            className="mb-4"
-          >
-            <Tab key="week" title="Semana" />
-            <Tab key="month" title="Mes" />
-            <Tab key="year" title="Año" />
-          </Tabs>
-
           <Tabs
             aria-label="Parámetros"
             selectedKey={selectedParameter}
@@ -93,66 +99,54 @@ export const Statistics = () => {
             size="sm"
             className="mb-6"
           >
-            {/* <Tab key="all" title="Todos" /> */}
-            <Tab key="temperature" title="Temperatura" />
-            <Tab key="ph" title="pH" />
-            <Tab key="ammonia" title="Amonio" />
-            <Tab key="dureza" title="Dureza" />
+            {Object.values(ParametroTipo).map((tipo) => (
+              <Tab key={tipo} title={tipo} />
+            ))}
           </Tabs>
 
           <div className="h-64 md:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={getData()}
-                margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+              <AreaChart
+                data={data}
+                margin={{ top: 5, right: 5, left: 10, bottom: 5 }}
               >
+                <defs>
+                  <linearGradient
+                    id="dynamicGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor={chartColors[selectedParameter]}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={chartColors[selectedParameter]}
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="time"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis
+                  domain={[23, 26]}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                  width={30}
+                />
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
                   opacity={0.3}
-                />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} />
-                <YAxis
-                  yAxisId="left"
-                  axisLine={false}
-                  tickLine={false}
-                  domain={[23, 26]}
-                  hide={
-                    selectedParameter !== "all" &&
-                    selectedParameter !== "temperature"
-                  }
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  domain={[6, 8]}
-                  hide={
-                    selectedParameter !== "all" && selectedParameter !== "ph"
-                  }
-                />
-                <YAxis
-                  yAxisId="ammonia"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  domain={[0, 0.5]}
-                  hide={
-                    selectedParameter !== "all" &&
-                    selectedParameter !== "ammonia"
-                  }
-                />
-                <YAxis
-                  yAxisId="dureza"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  domain={[0, 20]}
-                  hide={
-                    selectedParameter !== "all" &&
-                    selectedParameter !== "dureza"
-                  }
                 />
                 <Tooltip
                   contentStyle={{
@@ -161,57 +155,22 @@ export const Statistics = () => {
                     borderRadius: "8px",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
+                  formatter={(value: number) => [`${value}°C`, "Temperatura"]}
                 />
-                <Legend />
-                {(selectedParameter === "all" ||
-                  selectedParameter === "temperature") && (
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="temperature"
-                    name="Temperatura (°C)"
-                    stroke="hsl(var(--heroui-primary-500))"
-                    activeDot={{ r: 6 }}
-                    strokeWidth={2}
-                  />
-                )}
-                {(selectedParameter === "all" ||
-                  selectedParameter === "ph") && (
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="ph"
-                    name="pH"
-                    stroke="hsl(var(--heroui-secondary-500))"
-                    activeDot={{ r: 6 }}
-                    strokeWidth={2}
-                  />
-                )}
-                {(selectedParameter === "all" ||
-                  selectedParameter === "ammonia") && (
-                  <Line
-                    yAxisId="ammonia"
-                    type="monotone"
-                    dataKey="ammonia"
-                    name="Amonio (ppm)"
-                    stroke="hsl(var(--heroui-warning-500))"
-                    activeDot={{ r: 6 }}
-                    strokeWidth={2}
-                  />
-                )}
-                {(selectedParameter === "all" ||
-                  selectedParameter === "dureza") && (
-                  <Line
-                    yAxisId="dureza"
-                    type="monotone"
-                    dataKey="dureza"
-                    name="Dureza (ppm)"
-                    stroke="hsl(var(--heroui-danger-500))"
-                    activeDot={{ r: 6 }}
-                    strokeWidth={2}
-                  />
-                )}
-              </LineChart>
+                <Area
+                  type="monotone"
+                  dataKey="temperature"
+                  stroke={chartColors[selectedParameter]}
+                  fill="url(#dynamicGradient)"
+                  strokeWidth={2}
+                  activeDot={{
+                    r: 6,
+                    stroke: chartColors[selectedParameter],
+                    strokeWidth: 1,
+                    fill: "hsl(var(--heroui-background))",
+                  }}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </CardBody>
@@ -223,54 +182,47 @@ export const Statistics = () => {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">Temperatura</span>
-                <span className="text-sm text-foreground-500">23°C - 26°C</span>
-              </div>
-              <div className="h-2 bg-default-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary-500 rounded-full"
-                  style={{ width: "80%" }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">pH</span>
-                <span className="text-sm text-foreground-500">6.5 - 7.5</span>
-              </div>
-              <div className="h-2 bg-default-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-secondary-500 rounded-full"
-                  style={{ width: "90%" }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">Amonio</span>
+                <span
+                  className={`text-sm font-medium ${
+                    lastTempPercent >= 100 ? "text-[#FF0000]" : ""
+                  }`}
+                >
+                  Temperatura
+                </span>
                 <span className="text-sm text-foreground-500">
-                  0.0 - 0.25 ppm
+                  {acuarioSeleccionado.temp_min}°C -{" "}
+                  {acuarioSeleccionado.temp_max}°C
                 </span>
               </div>
               <div className="h-2 bg-default-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-warning-500 rounded-full"
-                  style={{ width: "50%" }}
+                  className={`h-full rounded-full  ${
+                    lastTempPercent >= 100 ? "bg-[#FF0000]" : "bg-primary-500"
+                  }`}
+                  style={{ width: `${lastTempPercent}%` }}
                 ></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">Dureza</span>
-                <span className="text-sm text-foreground-500">0 - 10 dGH</span>
+                <span
+                  className={`text-sm font-medium ${
+                    lastPhPercent >= 100 ? "text-[#FF0000]" : ""
+                  }`}
+                >
+                  pH
+                </span>
+                <span className="text-sm text-foreground-500">
+                  {acuarioSeleccionado.ph_min} - {acuarioSeleccionado.ph_max}
+                </span>
               </div>
               <div className="h-2 bg-default-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-danger-500 rounded-full"
-                  style={{ width: "75%" }}
+                  className={`h-full rounded-full ${
+                    lastPhPercent >= 100 ? "bg-[#FF0000]" : "bg-secondary-500"
+                  }`}
+                  style={{ width: `${lastPhPercent}%` }}
                 ></div>
               </div>
             </div>

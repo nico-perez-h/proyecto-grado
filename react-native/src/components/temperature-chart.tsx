@@ -8,54 +8,40 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useParametersRealTime } from "../hooks/useParametersRealTime";
+import { ParametroTipo } from "../interfaces";
 
 interface DataPoint {
   time: string;
   temperature: number;
 }
 
-interface TemperatureChartProps {
-  tankId?: number;
-}
-
-export const TemperatureChart: React.FC<TemperatureChartProps> = ({
-  tankId = 1,
-}) => {
-  // Different temperature data based on tank ID
-  const dataByTank = {
-    1: [
-      { time: "00:00", temperature: 24.2 },
-      { time: "04:00", temperature: 24.0 },
-      { time: "08:00", temperature: 24.3 },
-      { time: "12:00", temperature: 24.8 },
-      { time: "16:00", temperature: 25.1 },
-      { time: "20:00", temperature: 24.7 },
-    ],
-    2: [
-      { time: "00:00", temperature: 25.0 },
-      { time: "04:00", temperature: 24.8 },
-      { time: "08:00", temperature: 25.2 },
-      { time: "12:00", temperature: 25.5 },
-      { time: "16:00", temperature: 25.7 },
-      { time: "20:00", temperature: 25.4 },
-    ],
-  };
-
-  const [data, setData] = React.useState<DataPoint[]>(
-    dataByTank[tankId as keyof typeof dataByTank] || dataByTank[1]
+export const TemperatureChart = () => {
+  const { filteredParameters } = useParametersRealTime(
+    ParametroTipo.TEMPERATURA,
+    10
   );
 
-  // Update data when tankId changes
-  React.useEffect(() => {
-    setData(dataByTank[tankId as keyof typeof dataByTank] || dataByTank[1]);
-  }, [tankId]);
+  const reversed = [...filteredParameters].reverse();
+
+  const data: DataPoint[] = reversed.map((param) => {
+    const date = new Date(param.fecha_hora);
+    date.setHours(date.getHours() - 4);
+    return {
+      time: date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      temperature: param.valor,
+    };
+  });
 
   return (
-    <div className="chart-container w-full">
+    <div className="chart-container" style={{ width: "100%", height: 200 }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
-          margin={{ top: 5, right: 5, left: -20, bottom: 5 }}
+          margin={{ top: 5, right: 5, left: 10, bottom: 5 }}
         >
           <defs>
             <linearGradient

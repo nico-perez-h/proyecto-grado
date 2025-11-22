@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "@iconify/react";
+import { useUserContext } from "../context/userContext";
 
 interface NavigationProps {
   selected: string;
@@ -10,12 +11,18 @@ export const Navigation: React.FC<NavigationProps> = ({
   selected,
   onSelectionChange,
 }) => {
+  const { acuarioSeleccionado } = useUserContext();
+
   const navItems = [
     { key: "dashboard", label: "Inicio", icon: "lucide:layout-dashboard" },
-    { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" },
-    { key: "devices", label: "Dispositivos", icon: "lucide:settings-2" },
-    { key: "settings", label: "Ajustes", icon: "lucide:sliders" },
   ];
+  if (acuarioSeleccionado.id_central) {
+    navItems.push(
+      { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" },
+      { key: "devices", label: "Dispositivos", icon: "lucide:settings-2" }
+    );
+  }
+  navItems.push({ key: "settings", label: "Ajustes", icon: "lucide:sliders" });
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-divider">

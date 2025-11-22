@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useUserContext } from "../context/userContext";
 import { Parametro, ParametroTipo } from "../interfaces";
 import { formatFechaBonita } from "../utils/formatFechaBonita";
+import { useParametersRealTime } from "../hooks/useParametersRealTime";
 
 const parameterValues: Record<
   ParametroTipo,
@@ -74,88 +75,14 @@ export const WaterParameters = ({
   tipoSeleccionado,
   setTipoSeleccionado,
 }: Props) => {
-  const [parameters, setParameters] = useState<Parametro[]>([]);
-  const { acuarioSeleccionado } = useUserContext();
-
   const statusColors = {
     normal: "text-success-500",
     warning: "text-warning-500",
     danger: "text-danger-500",
   };
 
-  const fetchParameters = async () => {
-    const { data, error } = await supabase
-      .from("parametros")
-      .select("*")
-      .filter("id_acuario", "eq", acuarioSeleccionado.id)
-      .order("fecha_hora", { ascending: false });
-
-    if (error) console.error(error);
-    else setParameters(data);
-  };
-
-  useEffect(() => {
-    fetchParameters();
-
-    const channel = supabase
-      .channel("public:parametros")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "parametros",
-        },
-        (payload) => {
-          const parameter = payload.new as Parametro;
-
-          if (payload.eventType === "INSERT") {
-            if (parameter.id_acuario !== acuarioSeleccionado.id) return;
-            setParameters((prev) => [parameter, ...prev]);
-          } else if (payload.eventType === "UPDATE") {
-            if (parameter.id_acuario !== acuarioSeleccionado.id) return;
-            setParameters((prev) =>
-              prev.map((item) => (item.id === parameter.id ? parameter : item))
-            );
-          } else if (payload.eventType === "DELETE") {
-            setParameters((prev) =>
-              prev.filter((item) => item.id !== payload.old.id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [acuarioSeleccionado.id]);
-
-  const filteredParameters = React.useMemo(() => {
-    if (tipoSeleccionado) {
-      return parameters
-        .filter((p) => p.tipo === tipoSeleccionado)
-        .filter((_, i) => i < 20)
-        .sort(
-          (a, b) =>
-            new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime()
-        );
-    } else {
-      const uniqueParams = parameters.reduce((acc: Parametro[], curr) => {
-        if (!acc.find((p) => p.tipo === curr.tipo)) {
-          acc.push(curr);
-        }
-        return acc;
-      }, []);
-
-      const enumOrder = Object.values(ParametroTipo);
-      uniqueParams.sort(
-        (a, b) => enumOrder.indexOf(a.tipo) - enumOrder.indexOf(b.tipo)
-      );
-
-      return uniqueParams;
-    }
-  }, [parameters, tipoSeleccionado]);
+  const { filteredParameters, loading } =
+    useParametersRealTime(tipoSeleccionado);
 
   return (
     <div className="space-y-4">
@@ -210,6 +137,11 @@ export const WaterParameters = ({
             </Card>
           </button>
         ))}
+        {filteredParameters.length === 0 && (
+          <div className="col-span-2 text-center text-foreground-500 text-xs py-4">
+            {loading ? "Cargando..." : "No hay parámetros disponibles aún."}
+          </div>
+        )}
       </div>
     </div>
   );

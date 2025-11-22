@@ -25,6 +25,7 @@ export interface Acuario {
   filtro_programado: boolean;
   filtro_inicio: string;
   filtro_final: string;
+  id_central: string | null;
 }
 
 export interface Alerta {

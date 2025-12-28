@@ -23,12 +23,12 @@ export const Settings = ({ setSelected }: Props) => {
   const [notifications, setNotifications] = React.useState(false);
   const [selectedTab, setSelectedTab] = React.useState("general");
 
-  const [temperatureUnit, setTemperatureUnit] = React.useState("C");
-
   const { isDark } = useThemeContext();
   const { toggleAppTheme } = useAppTheme();
 
   const {
+    user,
+    setUser,
     acuarioSeleccionado,
     modificarAcuarioSeleccionado,
     setAcuarioSeleccionadoId,
@@ -66,6 +66,11 @@ export const Settings = ({ setSelected }: Props) => {
       acuarios && acuarios.length > 0 ? acuarios[0].id : null
     );
     setSelected("dashboard");
+  };
+
+  const changeTemperatureUnit = async (celsius: boolean) => {
+    setUser({ ...user, celsius });
+    await supabase.from("usuarios").update({ celsius }).eq("id", user.id);
   };
 
   return (
@@ -138,18 +143,17 @@ export const Settings = ({ setSelected }: Props) => {
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    variant={temperatureUnit === "C" ? "solid" : "bordered"}
-                    color={temperatureUnit === "C" ? "primary" : "default"}
-                    onPress={() => setTemperatureUnit("C")}
+                    variant={user.celsius ? "solid" : "bordered"}
+                    color={user.celsius ? "primary" : "default"}
+                    onPress={() => changeTemperatureUnit(true)}
                   >
                     °C
                   </Button>
                   <Button
                     size="sm"
-                    variant={temperatureUnit === "F" ? "solid" : "bordered"}
-                    color={temperatureUnit === "F" ? "primary" : "default"}
-                    onPress={() => setTemperatureUnit("F")}
-                    disabled
+                    variant={!user.celsius ? "solid" : "bordered"}
+                    color={!user.celsius ? "primary" : "default"}
+                    onPress={() => changeTemperatureUnit(false)}
                   >
                     °F
                   </Button>

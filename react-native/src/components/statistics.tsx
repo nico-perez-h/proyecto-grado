@@ -12,21 +12,70 @@ import {
 import { useParametersRealTime } from "../hooks/useParametersRealTime";
 import { ParametroTipo } from "../interfaces";
 import { useUserContext } from "../context/userContext";
+import celsiusToFarenheit from "../utils/celsiusToFarenheit";
 
 interface DataPoint {
   time: string;
   temperature: number;
 }
 
-const chartColors: Record<ParametroTipo, string> = {
-  [ParametroTipo.TEMPERATURA]: "hsl(var(--heroui-primary-500))",
-  [ParametroTipo.PH]: "hsl(var(--heroui-secondary-500))",
-  [ParametroTipo.AMONIO]: "hsl(var(--heroui-warning-500))",
-  [ParametroTipo.DUREZA]: "hsl(var(--heroui-danger-500))",
-  [ParametroTipo.NITRITOS]: "hsl(var(--heroui-info-500))",
-  [ParametroTipo.NITRATOS]: "hsl(var(--heroui-success-500))",
-  [ParametroTipo.ALCALINIDAD]: "hsl(var(--heroui-purple-500))",
-  [ParametroTipo.TDS]: "hsl(var(--heroui-pink-500))",
+const chartSettings: Record<
+  ParametroTipo,
+  {
+    color: string;
+    medida: string;
+    min: number;
+    max: number;
+  }
+> = {
+  [ParametroTipo.TEMPERATURA]: {
+    color: "hsl(var(--heroui-primary-500))",
+    medida: ":temperature_unit",
+    min: 0,
+    max: 0,
+  },
+  [ParametroTipo.PH]: {
+    color: "hsl(var(--heroui-secondary-500))",
+    medida: "",
+    min: 6.5,
+    max: 7.5,
+  },
+  [ParametroTipo.DUREZA]: {
+    color: "hsl(var(--heroui-danger-500))",
+    medida: "dGH",
+    min: 4,
+    max: 8,
+  },
+  [ParametroTipo.AMONIO]: {
+    color: "hsl(var(--heroui-warning-500))",
+    medida: "ppm",
+    min: 0,
+    max: 0.25,
+  },
+  [ParametroTipo.NITRITOS]: {
+    color: "hsl(var(--heroui-info-500))",
+    medida: "ppm",
+    min: 0,
+    max: 0,
+  },
+  [ParametroTipo.NITRATOS]: {
+    color: "hsl(var(--heroui-success-500))",
+    medida: "ppm",
+    min: 0,
+    max: 40,
+  },
+  [ParametroTipo.ALCALINIDAD]: {
+    color: "hsl(var(--heroui-purple-500))",
+    medida: "dKH",
+    min: 3,
+    max: 8,
+  },
+  [ParametroTipo.TDS]: {
+    color: "hsl(var(--heroui-pink-500))",
+    medida: "ppm",
+    min: 150,
+    max: 300,
+  },
 };
 
 const calculatePercentage = (
@@ -42,7 +91,7 @@ export const Statistics = () => {
   const [selectedParameter, setSelectedParameter] =
     React.useState<ParametroTipo>(ParametroTipo.TEMPERATURA);
 
-  const { acuarioSeleccionado } = useUserContext();
+  const { acuarioSeleccionado, user } = useUserContext();
   const { filteredParameters, parameters } =
     useParametersRealTime(selectedParameter);
 
@@ -56,7 +105,12 @@ export const Statistics = () => {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      temperature: param.valor,
+      temperature:
+        param.tipo === ParametroTipo.TEMPERATURA
+          ? user.celsius
+            ? param.valor
+            : celsiusToFarenheit(param.valor)
+          : param.valor,
     };
   });
 
@@ -120,12 +174,12 @@ export const Statistics = () => {
                   >
                     <stop
                       offset="5%"
-                      stopColor={chartColors[selectedParameter]}
+                      stopColor={chartSettings[selectedParameter].color}
                       stopOpacity={0.3}
                     />
                     <stop
                       offset="95%"
-                      stopColor={chartColors[selectedParameter]}
+                      stopColor={chartSettings[selectedParameter].color}
                       stopOpacity={0}
                     />
                   </linearGradient>
@@ -137,7 +191,18 @@ export const Statistics = () => {
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis
-                  domain={[23, 26]}
+                  domain={[
+                    selectedParameter === ParametroTipo.TEMPERATURA
+                      ? user.celsius
+                        ? acuarioSeleccionado.temp_min
+                        : celsiusToFarenheit(acuarioSeleccionado.temp_min)
+                      : chartSettings[selectedParameter].min,
+                    selectedParameter === ParametroTipo.TEMPERATURA
+                      ? user.celsius
+                        ? acuarioSeleccionado.temp_max
+                        : celsiusToFarenheit(acuarioSeleccionado.temp_max)
+                      : chartSettings[selectedParameter].max,
+                  ]}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12 }}
@@ -155,17 +220,23 @@ export const Statistics = () => {
                     borderRadius: "8px",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
-                  formatter={(value: number) => [`${value}°C`, "Temperatura"]}
+                  formatter={(value: number) => [
+                    `${value}${chartSettings[selectedParameter].medida.replace(
+                      ":temperature_unit",
+                      user.celsius ? "°C" : "°F"
+                    )}`,
+                    "Temperatura",
+                  ]}
                 />
                 <Area
                   type="monotone"
                   dataKey="temperature"
-                  stroke={chartColors[selectedParameter]}
+                  stroke={chartSettings[selectedParameter].color}
                   fill="url(#dynamicGradient)"
                   strokeWidth={2}
                   activeDot={{
                     r: 6,
-                    stroke: chartColors[selectedParameter],
+                    stroke: chartSettings[selectedParameter].color,
                     strokeWidth: 1,
                     fill: "hsl(var(--heroui-background))",
                   }}
@@ -190,8 +261,14 @@ export const Statistics = () => {
                   Temperatura
                 </span>
                 <span className="text-sm text-foreground-500">
-                  {acuarioSeleccionado.temp_min}°C -{" "}
-                  {acuarioSeleccionado.temp_max}°C
+                  {user.celsius
+                    ? acuarioSeleccionado.temp_min
+                    : celsiusToFarenheit(acuarioSeleccionado.temp_min)}
+                  {user.celsius ? "°C" : "°F"} -{" "}
+                  {user.celsius
+                    ? acuarioSeleccionado.temp_max
+                    : celsiusToFarenheit(acuarioSeleccionado.temp_max)}
+                  {user.celsius ? "°C" : "°F"}
                 </span>
               </div>
               <div className="h-2 bg-default-100 rounded-full overflow-hidden">

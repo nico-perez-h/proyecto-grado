@@ -18,8 +18,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   ];
   if (acuarioSeleccionado.id_central) {
     navItems.push(
-      { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" },
-      { key: "devices", label: "Dispositivos", icon: "lucide:settings-2" }
+      { key: "devices", label: "Dispositivos", icon: "lucide:settings-2" },
+      { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" }
     );
   }
   navItems.push({ key: "settings", label: "Ajustes", icon: "lucide:sliders" });

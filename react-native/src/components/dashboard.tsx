@@ -35,26 +35,7 @@ export const Dashboard = ({ setSelected }: Props) => {
   const [tipoSeleccionado, setTipoSeleccionado] =
     React.useState<ParametroTipo | null>(null);
 
-  // Definir los tanques disponibles
-  const [tanks, setTanks] = React.useState([
-    {
-      id: 1,
-      name: "Acuario Principal",
-      waterLevel: 85,
-      lastUpdate: "hace 5 minutos",
-    },
-    {
-      id: 2,
-      name: "Acuario Plantado",
-      waterLevel: 72,
-      lastUpdate: "hace 15 minutos",
-    },
-  ]);
   const [codigoCentral, setCodigoCentral] = React.useState("");
-
-  // Estado para el tanque seleccionado
-  const [selectedTankIndex] = React.useState(0);
-  const currentTank = tanks[selectedTankIndex];
 
   const handleNuevoAcuario = async () => {
     const { data, error } = await supabase
@@ -72,9 +53,6 @@ export const Dashboard = ({ setSelected }: Props) => {
     anadirAcuario(data);
     setAcuarioSeleccionadoId(data.id);
   };
-
-  const showUI = !viewAlerts && !tipoSeleccionado;
-  const showUIwithESP = !!acuarioSeleccionado?.id_central;
 
   const handleSendCodigoCentral = async () => {
     const codigo = codigoCentral.trim();
@@ -129,6 +107,11 @@ export const Dashboard = ({ setSelected }: Props) => {
       alert("Error inesperado.");
     }
   };
+
+  const [isNewParameter, setIsNewParameter] = React.useState(false);
+
+  const showUI = !viewAlerts && !tipoSeleccionado && !isNewParameter;
+  const showUIwithESP = !!acuarioSeleccionado?.id_central;
 
   return (
     <div className="space-y-6">
@@ -207,8 +190,7 @@ export const Dashboard = ({ setSelected }: Props) => {
               setCodigoCentral(e.target.value);
             }}
           />
-          <Button
-            variant="solid"
+          <Button variant="solid"
             color="primary"
             size="sm"
             onPress={handleSendCodigoCentral}
@@ -218,16 +200,18 @@ export const Dashboard = ({ setSelected }: Props) => {
         </div>
       )}
 
-      {(showUI || tipoSeleccionado) && showUIwithESP && (
+      {(showUI || tipoSeleccionado || isNewParameter) && showUIwithESP && (
         <WaterParameters
           setTipoSeleccionado={setTipoSeleccionado}
           tipoSeleccionado={tipoSeleccionado}
+          isNewParameter={isNewParameter}
+          setIsNewParameter={setIsNewParameter}
         />
       )}
 
       {showUI && showUIwithESP && (
         <>
-          <DeviceControls />
+          <DeviceControls setSelected={setSelected} />
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Temperatura</h3>

@@ -98,5 +98,9 @@ export const useParametersRealTime = (
     }
   }, [parameters, tipoSeleccionado]);
 
-  return { filteredParameters, parameters, loading };
+  const existingParameters: ParametroTipo[] = [
+    ...new Set(parameters.map((p) => p.tipo)),
+  ];
+
+  return { filteredParameters, parameters, existingParameters, loading };
 };

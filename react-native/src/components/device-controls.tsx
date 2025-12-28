@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardBody, Switch, Tooltip } from "@heroui/react";
+import { Button, Card, CardBody, Switch, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import { useUserContext } from "../context/userContext";
@@ -53,10 +53,12 @@ const DeviceControl: React.FC<DeviceControlProps> = ({
 };
 
 interface DeviceControlsProps {
-  tankId?: number;
+  setSelected: (section: string) => void;
 }
 
-export const DeviceControls: React.FC<DeviceControlsProps> = () => {
+export const DeviceControls: React.FC<DeviceControlsProps> = ({
+  setSelected,
+}: DeviceControlsProps) => {
   const { acuarioSeleccionado, modificarAcuarioSeleccionado } =
     useUserContext();
 
@@ -92,6 +94,14 @@ export const DeviceControls: React.FC<DeviceControlsProps> = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Dispositivos</h3>
+        <Button
+          variant="light"
+          size="sm"
+          endContent={<Icon icon="lucide:arrow-right" />}
+          onPress={() => setSelected("devices")}
+        >
+          Ver más
+        </Button>
       </div>
       <div className="space-y-3">
         <motion.div

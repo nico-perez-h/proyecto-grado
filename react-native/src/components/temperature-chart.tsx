@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import { useParametersRealTime } from "../hooks/useParametersRealTime";
 import { ParametroTipo } from "../interfaces";
+import { useUserContext } from "../context/userContext";
+import celsiusToFarenheit from "../utils/celsiusToFarenheit";
 
 interface DataPoint {
   time: string;
@@ -17,6 +19,7 @@ interface DataPoint {
 }
 
 export const TemperatureChart = () => {
+  const { user, acuarioSeleccionado } = useUserContext();
   const { filteredParameters } = useParametersRealTime(
     ParametroTipo.TEMPERATURA,
     10
@@ -32,7 +35,7 @@ export const TemperatureChart = () => {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      temperature: param.valor,
+      temperature: user.celsius ? param.valor : celsiusToFarenheit(param.valor),
     };
   });
 
@@ -70,7 +73,14 @@ export const TemperatureChart = () => {
             tick={{ fontSize: 12 }}
           />
           <YAxis
-            domain={[23, 26]}
+            domain={[
+              user.celsius
+                ? acuarioSeleccionado.temp_min
+                : celsiusToFarenheit(acuarioSeleccionado.temp_min),
+              user.celsius
+                ? acuarioSeleccionado.temp_max
+                : celsiusToFarenheit(acuarioSeleccionado.temp_max),
+            ]}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12 }}
@@ -84,7 +94,10 @@ export const TemperatureChart = () => {
               borderRadius: "8px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
-            formatter={(value: number) => [`${value}°C`, "Temperatura"]}
+            formatter={(value: number) => [
+              `${value}${user.celsius ? "°C" : "°F"}`,
+              "Temperatura",
+            ]}
           />
           <Area
             type="monotone"

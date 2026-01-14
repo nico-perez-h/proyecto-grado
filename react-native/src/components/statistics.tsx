@@ -225,7 +225,7 @@ export const Statistics = () => {
                       ":temperature_unit",
                       user.celsius ? "°C" : "°F"
                     )}`,
-                    "Temperatura",
+                    selectedParameter,
                   ]}
                 />
                 <Area

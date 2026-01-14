@@ -12,11 +12,15 @@ import { SplashScreen } from "./components/splash-screen";
 import { supabase } from "./lib/supabaseClient";
 import { useUserContext } from "./context/userContext";
 import { useAppTheme } from "./hooks/useAppTheme";
+import { ChatbotButton } from "./components/chatbot/chatbot-button";
+import { Chatbot } from "./components/chatbot/chatbot";
 
 // Componente principal de la aplicación
 export default function App() {
   // Estado que guarda qué sección está seleccionada en la navegación
   const [selected, setSelected] = React.useState("dashboard");
+
+  const [isChatbotOpen, setIsChatbotOpen] = React.useState(false);
 
   const { user, setUser, setAcuarios, setAcuarioSeleccionadoId } =
     useUserContext();
@@ -111,6 +115,12 @@ export default function App() {
 
       {/* Barra de navegación inferior para cambiar de sección */}
       <Navigation selected={selected} onSelectionChange={setSelected} />
+
+      <ChatbotButton
+        onClick={() => setIsChatbotOpen(!isChatbotOpen)}
+        isOpen={isChatbotOpen}
+      />
+      <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} />
     </div>
   );
 }

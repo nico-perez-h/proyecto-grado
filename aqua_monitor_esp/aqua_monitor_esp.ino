@@ -10,6 +10,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 // ---------------- CONFIGURACIÓN ESP 32 ----------------
 const char* codigoESP = "ESP_001"; 
@@ -41,12 +42,18 @@ float phValue = 0.0;
 
 // ---------------- LED CONTROL ----------------
 const int ledPin = 12;
-bool ledState = false;
 bool estadoLuz = false;
+bool programacionLuz = false;
+int horaLuzInicio = 0;
+int minutoLuzInicio = 0;
+int segLuzInicio = 0;
+int horaLuzFinal = 0;
+int minutoLuzFinal = 0;
+int segLuzFinal  = 0;
 
 const int filtroPin = 13;
-bool filtroState = false;
 bool estadoFiltro = false;
+bool programacionFiltro = false;
 
 // ---------------- NOTIFICATIONS ----------------
 bool enviadoNotTemp = false;
@@ -55,6 +62,11 @@ int minTemp = 0;
 int maxTemp = 100;
 int minPh = 0;
 int maxPh = 100;
+
+// ---------------- HOUR -----------------
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = -4 * 3600;   // Bolivia GMT-4
+const int daylightOffset_sec = 0;
 
 // ---------------- TIMING ----------------
 unsigned long previousMillisSend = 0;
@@ -92,8 +104,18 @@ void setup() {
   lcd.print("WiFi conectado");
   delay(1000);
 
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    lcd.clear();
+    lcd.setCursor(0, 1);
+    lcd.print("Error hora");
+    return;
+  }
+
   // ⚠️ VALIDAR CÓDIGO CON SUPABASE
   lcd.clear();
+  lcd.setCursor(0, 1);
   lcd.print("Validando ESP");
 
   bool valido = validarCodigoESP();
@@ -149,11 +171,23 @@ bool validarCodigoESP() {
     // Guardar el id del acuario asociado
     idAcuario = doc[0]["id"];
     estadoLuz = doc[0]["luz"];
+    programacionLuz = doc[0]["luz_programada"];
     estadoFiltro = doc[0]["filtro"];
+    programacionFiltro = doc[0]["filtro_programado"];
     minTemp = doc[0]["temp_min"];
     maxTemp = doc[0]["temp_max"];
     minPh = doc[0]["ph_min"];
     maxPh = doc[0]["ph_max"];
+
+    String horaLuzInicioStr = doc[0]["luz_inicio"].as<String>();
+    horaLuzInicio   = horaLuzInicioStr.substring(0, 2).toInt();
+    minutoLuzInicio = horaLuzInicioStr.substring(3, 5).toInt();
+    segLuzInicio = horaLuzInicio * 3600 + minutoLuzInicio * 60;
+
+    String horaLuzFinalStr = doc[0]["luz_final"].as<String>();
+    horaLuzFinal   = horaLuzFinalStr.substring(0, 2).toInt();
+    minutoLuzFinal = horaLuzFinalStr.substring(3, 5).toInt();
+    segLuzFinal  = horaLuzFinal  * 3600 + minutoLuzFinal  * 60;
 
     digitalWrite(ledPin, estadoLuz ? LOW : HIGH);
     digitalWrite(filtroPin, estadoFiltro ? LOW : HIGH);
@@ -162,7 +196,6 @@ bool validarCodigoESP() {
 
     http.end();
     return true;
-
   } else {
     Serial.print("❌ Error GET Supabase: ");
     Serial.println(httpCode);
@@ -296,24 +329,31 @@ void leerEstadoLuz() {
     DynamicJsonDocument doc(1024);
     DeserializationError error = deserializeJson(doc, payload);
 
-    if (!error && doc[0]["luz"].is<bool>()) {
+    programacionLuz = doc[0]["luz_programada"];
+
+    String horaLuzInicioStr = doc[0]["luz_inicio"].as<String>();
+    horaLuzInicio   = horaLuzInicioStr.substring(0, 2).toInt();
+    minutoLuzInicio = horaLuzInicioStr.substring(3, 5).toInt();
+    segLuzInicio = horaLuzInicio * 3600 + minutoLuzInicio * 60;
+
+    String horaLuzFinalStr = doc[0]["luz_final"].as<String>();
+    horaLuzFinal   = horaLuzFinalStr.substring(0, 2).toInt();
+    minutoLuzFinal = horaLuzFinalStr.substring(3, 5).toInt();
+    segLuzFinal  = horaLuzFinal  * 3600 + minutoLuzFinal  * 60;
+
+    if (!programacionLuz) {
       bool nuevoEstadoLed = doc[0]["luz"];
       digitalWrite(ledPin, nuevoEstadoLed ? LOW : HIGH);
-      ledState = nuevoEstadoLed;
       Serial.print("💡 Luz: ");
-      Serial.println(ledState ? "ENCENDIDA" : "APAGADA");
-    } else {
-      Serial.println("❌ Error leyendo JSON luz.");
+      Serial.println(nuevoEstadoLed ? "ENCENDIDA" : "APAGADA");
     }
 
-    if (!error && doc[0]["filtro"].is<bool>()) {
+    programacionFiltro = doc[0]["filtro_programado"];
+    if (!programacionFiltro) {
       bool nuevoEstadoFiltro = doc[0]["filtro"];
       digitalWrite(filtroPin, nuevoEstadoFiltro ? LOW : HIGH);
-      filtroState = nuevoEstadoFiltro;
       Serial.print("💧 Filtro: ");
-      Serial.println(filtroState ? "ENCENDIDO" : "APAGADO");
-    } else {
-      Serial.println("❌ Error leyendo JSON filtro.");
+      Serial.println(nuevoEstadoFiltro ? "ENCENDIDO" : "APAGADO");
     }
   } else {
     Serial.print("❌ Error al obtener estado del acuario: ");
@@ -321,6 +361,27 @@ void leerEstadoLuz() {
   }
 
   http.end();
+}
+
+void controlarDispositivosProgramados() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) return;
+
+  int ahoraSeg =  timeinfo.tm_hour * 3600 +
+                  timeinfo.tm_min  * 60 +
+                  timeinfo.tm_sec;
+
+  if (programacionLuz) {
+    bool luzDebeEstarEncendida;
+
+    if (segLuzInicio < segLuzFinal) {
+      luzDebeEstarEncendida = (ahoraSeg >= segLuzInicio && ahoraSeg < segLuzFinal);
+    } else {
+      luzDebeEstarEncendida = (ahoraSeg >= segLuzInicio || ahoraSeg < segLuzFinal);
+    }
+
+    digitalWrite(ledPin, luzDebeEstarEncendida ? LOW : HIGH);
+  }
 }
 
 // ===========================================================

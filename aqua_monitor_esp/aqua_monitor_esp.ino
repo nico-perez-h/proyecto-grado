@@ -18,8 +18,8 @@ bool validarCodigoESP();
 int idAcuario = -1;  // <-- Guardará el id del acuario asociado al ESP
 
 // ---------------- CONFIGURACIÓN WIFI ----------------
-const char* ssid = "nico-perez";
-const char* password = "1234567890";
+const char* ssid = "PEREZ_MESH";
+const char* password = "3007069wpj";
 
 // ---------------- CONFIGURACIÓN SUPABASE ----------------
 String supabase_url = "https://atjbisxvrsjdgujtotnm.supabase.co/rest/v1/parametros";
@@ -36,12 +36,12 @@ OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 
 // ---------------- SENSOR DE PH ----------------
-const int phPin = 5; /// aquii
+const int phPin = 34; /// aquii
 float voltage = 0.0;
 float phValue = 0.0;
 
 // ---------------- LED CONTROL ----------------
-const int ledPin = 12;
+const int ledPin = 26;
 bool estadoLuz = false;
 bool programacionLuz = false;
 int horaLuzInicio = 0;
@@ -51,7 +51,7 @@ int horaLuzFinal = 0;
 int minutoLuzFinal = 0;
 int segLuzFinal  = 0;
 
-const int filtroPin = 13;
+const int filtroPin = 27;
 bool estadoFiltro = false;
 bool programacionFiltro = false;
 
@@ -341,16 +341,25 @@ void leerEstadoLuz() {
     minutoLuzFinal = horaLuzFinalStr.substring(3, 5).toInt();
     segLuzFinal  = horaLuzFinal  * 3600 + minutoLuzFinal  * 60;
 
+    bool nuevoEstadoLed = doc[0]["luz"];
+    estadoLuz = nuevoEstadoLed;
     if (!programacionLuz) {
-      bool nuevoEstadoLed = doc[0]["luz"];
       digitalWrite(ledPin, nuevoEstadoLed ? LOW : HIGH);
       Serial.print("💡 Luz: ");
       Serial.println(nuevoEstadoLed ? "ENCENDIDA" : "APAGADA");
+    } else {
+      if (nuevoEstadoLed) {
+        Serial.println("💡 Luz programada de " + horaLuzInicioStr + " a " + horaLuzFinalStr);
+      } else {
+        digitalWrite(ledPin, HIGH);
+        Serial.println("💡 Luz: APAGADA");
+      }
     }
 
     programacionFiltro = doc[0]["filtro_programado"];
     if (!programacionFiltro) {
       bool nuevoEstadoFiltro = doc[0]["filtro"];
+      estadoFiltro = nuevoEstadoFiltro;
       digitalWrite(filtroPin, nuevoEstadoFiltro ? LOW : HIGH);
       Serial.print("💧 Filtro: ");
       Serial.println(nuevoEstadoFiltro ? "ENCENDIDO" : "APAGADO");
@@ -378,6 +387,9 @@ void controlarDispositivosProgramados() {
       luzDebeEstarEncendida = (ahoraSeg >= segLuzInicio && ahoraSeg < segLuzFinal);
     } else {
       luzDebeEstarEncendida = (ahoraSeg >= segLuzInicio || ahoraSeg < segLuzFinal);
+    }
+    if (!estadoLuz) {
+      luzDebeEstarEncendida = false;
     }
 
     digitalWrite(ledPin, luzDebeEstarEncendida ? LOW : HIGH);

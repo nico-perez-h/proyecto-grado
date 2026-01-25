@@ -19,13 +19,13 @@ export const Navigation: React.FC<NavigationProps> = ({
   if (acuarioSeleccionado.id_central) {
     navItems.push(
       { key: "devices", label: "Dispositivos", icon: "lucide:settings-2" },
-      { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" }
+      { key: "statistics", label: "Estadísticas", icon: "lucide:bar-chart-2" },
     );
   }
   navItems.push({ key: "settings", label: "Ajustes", icon: "lucide:sliders" });
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-divider">
+    <nav className="!z-50 fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-divider">
       <div className="container mx-auto px-4">
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => (

@@ -49,14 +49,14 @@ export const Alerts = ({ viewAlerts, setViewAlerts }: Props) => {
           } else if (payload.eventType === "UPDATE") {
             if (alert.id_acuario !== acuarioSeleccionado.id) return;
             setAlerts((prev) =>
-              prev.map((item) => (item.id === alert.id ? alert : item))
+              prev.map((item) => (item.id === alert.id ? alert : item)),
             );
           } else if (payload.eventType === "DELETE") {
             setAlerts((prev) =>
-              prev.filter((item) => item.id !== payload.old.id)
+              prev.filter((item) => item.id !== payload.old.id),
             );
           }
-        }
+        },
       )
       .subscribe();
 
@@ -102,7 +102,7 @@ export const Alerts = ({ viewAlerts, setViewAlerts }: Props) => {
       {alerts.length > 0 ? (
         <div className="space-y-3">
           {alerts
-            .filter((_, i) => !!viewAlerts || i <= 0)
+            .filter((_, i) => !!viewAlerts || i <= 1)
             .map((alert, index) => (
               <motion.div
                 key={alert.id}

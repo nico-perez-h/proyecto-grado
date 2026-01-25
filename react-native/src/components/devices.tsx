@@ -93,7 +93,7 @@ export const Devices = () => {
                     <h3 className="font-medium">Luz</h3>
                     <p className="text-xs text-foreground-500">
                       {acuarioSeleccionado.luz_programada
-                        ? `Programado: ${acuarioSeleccionado.luz_inicio} - ${acuarioSeleccionado.luz_final}`
+                        ? `Programado: ${acuarioSeleccionado.luz_inicio.slice(0, 5)} - ${acuarioSeleccionado.luz_final.slice(0, 5)}`
                         : "Sin programación"}
                     </p>
                   </div>

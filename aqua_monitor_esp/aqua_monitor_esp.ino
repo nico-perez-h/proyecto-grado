@@ -15,7 +15,6 @@
 const char* codigoESP = "ESP_001"; 
 bool validarCodigoESP();
 int idAcuario = -1;  // <-- Guardará el id del acuario asociado al ESP
- 
 
 // ---------------- CONFIGURACIÓN WIFI ----------------
 const char* ssid = "nico-perez";
@@ -172,6 +171,44 @@ bool validarCodigoESP() {
   }
 }
 
+void sincronizarDatosMinimosMaximos() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  String url = supabase_table_acuarios + "?id=eq." + String(idAcuario);
+  http.begin(url);
+  http.addHeader("apikey", supabase_api_key);
+  http.addHeader("Authorization", "Bearer " + supabase_api_key);
+
+  int httpCode = http.GET();
+
+  if (httpCode > 0) {
+    String payload = http.getString();
+    Serial.println("Respuesta Supabase:");
+    Serial.println(payload);
+
+    DynamicJsonDocument doc(1024);
+    DeserializationError error = deserializeJson(doc, payload);
+
+    if (error) {
+      Serial.println("❌ Error al actualizar valores mínimos y máximos.");
+      http.end();
+      return;
+    }
+
+    minTemp = doc[0]["temp_min"];
+    maxTemp = doc[0]["temp_max"];
+    minPh = doc[0]["ph_min"];
+    maxPh = doc[0]["ph_max"];
+
+    Serial.print("✅ Válores mínimos y máximos actualizados.");
+    http.end();
+  } else {
+    Serial.println("❌ Error al actualizar valores mínimos y máximos.");
+    http.end();
+  }
+}
+
 void enviarDatosSupabase(float tempC, float phValue) {
   if (WiFi.status() != WL_CONNECTED) return;
 
@@ -204,13 +241,13 @@ void enviarDatosSupabase(float tempC, float phValue) {
   http_alertas.addHeader("Prefer", "return=minimal");
 
   // alertas de temperatura
-  if (tempC <= minTemp && !enviadoNotTemp) {
-    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de temperatura\", \"descripcion\": \"Temperatura mínima fuera de rango: " + String(tempC, 2) + " < " + String(minTemp, 2) + "\"}";
+  if (tempC <= minTemp && !enviadoNotTemp && tempC != -127) {
+    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de temperatura\", \"descripcion\": \"Temperatura mínima fuera de rango: " + String(tempC, 2) + " < " + String(minTemp) + "\"}";
     http_alertas.POST(jsonStr);
     enviadoNotTemp = true;
   }
   if (tempC >= maxTemp && !enviadoNotTemp) {
-    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de temperatura\", \"descripcion\": \"Temperatura máxima fuera de rango: " + String(tempC, 2) + " > " + String(maxTemp, 2) + "\"}";
+    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de temperatura\", \"descripcion\": \"Temperatura máxima fuera de rango: " + String(tempC, 2) + " > " + String(maxTemp) + "\"}";
     http_alertas.POST(jsonStr);
     enviadoNotTemp = true;
   }
@@ -220,12 +257,12 @@ void enviarDatosSupabase(float tempC, float phValue) {
 
   // alertas de ph
   if (phValue <= minPh && !enviadoNotPh) {
-    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de pH\", \"descripcion\": \"pH mínimo fuera de rango: " + String(phValue, 2) + " < " + String(minPh, 2) + "\"}";
+    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de pH\", \"descripcion\": \"pH mínimo fuera de rango: " + String(phValue, 2) + " < " + String(minPh) + "\"}";
     http_alertas.POST(jsonStr);
     enviadoNotPh = true;
   }
   if (phValue >= maxPh && !enviadoNotPh) {
-    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de pH\", \"descripcion\": \"pH máximo fuera de rango: " + String(phValue, 2) + " > " + String(maxPh, 2) + "\"}";
+    String jsonStr = "{\"id_acuario\": " + String(idAcuario) + ", \"titulo\": \"Alerta de pH\", \"descripcion\": \"pH máximo fuera de rango: " + String(phValue, 2) + " > " + String(maxPh) + "\"}";
     http_alertas.POST(jsonStr);
     enviadoNotPh = true;
   }
@@ -235,7 +272,7 @@ void enviarDatosSupabase(float tempC, float phValue) {
 
   http_alertas.end();
 
-  Serial.println("✅ Datos enviados a Supabase");
+  Serial.println("✅ Datos enviados a Supabase.");
   lcd.clear();
   lcd.print("Datos enviados!");
 }
@@ -266,17 +303,17 @@ void leerEstadoLuz() {
       Serial.print("💡 Luz: ");
       Serial.println(ledState ? "ENCENDIDA" : "APAGADA");
     } else {
-      Serial.println("⚠️ Error leyendo JSON luz.");
+      Serial.println("❌ Error leyendo JSON luz.");
     }
 
     if (!error && doc[0]["filtro"].is<bool>()) {
       bool nuevoEstadoFiltro = doc[0]["filtro"];
       digitalWrite(filtroPin, nuevoEstadoFiltro ? LOW : HIGH);
       filtroState = nuevoEstadoFiltro;
-      Serial.print("♒ Filtro: ");
+      Serial.print("💧 Filtro: ");
       Serial.println(filtroState ? "ENCENDIDO" : "APAGADO");
     } else {
-      Serial.println("⚠️ Error leyendo JSON filtro.");
+      Serial.println("❌ Error leyendo JSON filtro.");
     }
   } else {
     Serial.print("❌ Error al obtener estado del acuario: ");
@@ -309,11 +346,12 @@ void loop() {
   lcd.print("Ph: ");
   lcd.print(phValue, 1);
 
-  // ===== Enviar datos cada 2 min =====
+  // ===== Sincronizar datos cada 2 min =====
   Serial.print("🕛 Sincronizando datos en: ");
   Serial.println((currentMillis - previousMillisSend) / 1000);
   if (currentMillis - previousMillisSend >= sendInterval) {
     previousMillisSend = currentMillis;
+    sincronizarDatosMinimosMaximos();
     enviarDatosSupabase(tempC, phValue);
   } 
 

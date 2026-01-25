@@ -54,6 +54,12 @@ int segLuzFinal  = 0;
 const int filtroPin = 27;
 bool estadoFiltro = false;
 bool programacionFiltro = false;
+int horaFiltroInicio = 0;
+int minutoFiltroInicio = 0;
+int segFiltroInicio = 0;
+int horaFiltroFinal = 0;
+int minutoFiltroFinal = 0;
+int segFiltroFinal  = 0;
 
 // ---------------- NOTIFICATIONS ----------------
 bool enviadoNotTemp = false;
@@ -189,8 +195,18 @@ bool validarCodigoESP() {
     minutoLuzFinal = horaLuzFinalStr.substring(3, 5).toInt();
     segLuzFinal  = horaLuzFinal  * 3600 + minutoLuzFinal  * 60;
 
-    digitalWrite(ledPin, estadoLuz ? LOW : HIGH);
-    digitalWrite(filtroPin, estadoFiltro ? LOW : HIGH);
+    String horaFiltroInicioStr = doc[0]["filtro_inicio"].as<String>();
+    horaFiltroInicio   = horaFiltroInicioStr.substring(0, 2).toInt();
+    minutoFiltroInicio = horaFiltroInicioStr.substring(3, 5).toInt();
+    segFiltroInicio = horaFiltroInicio * 3600 + minutoFiltroInicio * 60;
+
+    String horaFiltroFinalStr = doc[0]["filtro_final"].as<String>();
+    horaFiltroFinal   = horaFiltroFinalStr.substring(0, 2).toInt();
+    minutoFiltroFinal = horaFiltroFinalStr.substring(3, 5).toInt();
+    segFiltroFinal  = horaFiltroFinal  * 3600 + minutoFiltroFinal  * 60;
+
+    digitalWrite(ledPin, estadoLuz ? (programacionLuz ? HIGH : LOW) : HIGH);
+    digitalWrite(filtroPin, estadoFiltro ? (programacionFiltro ? HIGH : LOW) : HIGH);
     Serial.print("✅ Código ESP validado. idAcuario: ");
     Serial.println(idAcuario);
 
@@ -357,12 +373,30 @@ void leerEstadoLuz() {
     }
 
     programacionFiltro = doc[0]["filtro_programado"];
+
+    String horaFiltroInicioStr = doc[0]["filtro_inicio"].as<String>();
+    horaFiltroInicio   = horaFiltroInicioStr.substring(0, 2).toInt();
+    minutoFiltroInicio = horaFiltroInicioStr.substring(3, 5).toInt();
+    segFiltroInicio = horaFiltroInicio * 3600 + minutoFiltroInicio * 60;
+
+    String horaFiltroFinalStr = doc[0]["filtro_final"].as<String>();
+    horaFiltroFinal   = horaFiltroFinalStr.substring(0, 2).toInt();
+    minutoFiltroFinal = horaFiltroFinalStr.substring(3, 5).toInt();
+    segFiltroFinal  = horaFiltroFinal  * 3600 + minutoFiltroFinal  * 60;
+
+    bool nuevoEstadoFiltro = doc[0]["filtro"];
+    estadoFiltro = nuevoEstadoFiltro;
     if (!programacionFiltro) {
-      bool nuevoEstadoFiltro = doc[0]["filtro"];
-      estadoFiltro = nuevoEstadoFiltro;
       digitalWrite(filtroPin, nuevoEstadoFiltro ? LOW : HIGH);
       Serial.print("💧 Filtro: ");
       Serial.println(nuevoEstadoFiltro ? "ENCENDIDO" : "APAGADO");
+    } else {
+      if (nuevoEstadoFiltro) {
+        Serial.println("💧 Filtro programado de " + horaFiltroInicioStr + " a " + horaFiltroFinalStr);
+      } else {
+        digitalWrite(filtroPin, HIGH);
+        Serial.println("💧 Filtro: APAGADO");
+      }
     }
   } else {
     Serial.print("❌ Error al obtener estado del acuario: ");
@@ -393,6 +427,21 @@ void controlarDispositivosProgramados() {
     }
 
     digitalWrite(ledPin, luzDebeEstarEncendida ? LOW : HIGH);
+  }
+
+  if (programacionFiltro) {
+    bool filtroDebeEstarEncendido;
+
+    if (segFiltroInicio < segFiltroFinal) {
+      filtroDebeEstarEncendido = (ahoraSeg >= segFiltroInicio && ahoraSeg < segFiltroFinal);
+    } else {
+      filtroDebeEstarEncendido = (ahoraSeg >= segFiltroInicio || ahoraSeg < segFiltroFinal);
+    }
+    if (!estadoFiltro) {
+      filtroDebeEstarEncendido = false;
+    }
+
+    digitalWrite(filtroPin, filtroDebeEstarEncendido ? LOW : HIGH);
   }
 }
 
@@ -435,6 +484,8 @@ void loop() {
     previousMillisLed = currentMillis;
     leerEstadoLuz();
   }
+
+  controlarDispositivosProgramados();
 
   delay(1000);
 }

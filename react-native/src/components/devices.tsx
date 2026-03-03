@@ -1,12 +1,34 @@
-import { Card, CardBody, Switch } from "@heroui/react";
+import { Card, CardBody, Input, Switch } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useUserContext } from "../context/userContext";
 import { supabase } from "../lib/supabaseClient";
 
 export const Devices = () => {
   const { acuarioSeleccionado, modificarAcuarioSeleccionado } =
     useUserContext();
+  const [luzInicio, setLuzInicio] = useState("");
+  const [luzFinal, setLuzFinal] = useState("");
+  const [filtroInicio, setFiltroInicio] = useState("");
+  const [filtroFinal, setFiltroFinal] = useState("");
+
+  const toInputTime = (value: string) => value?.slice(0, 5) ?? "";
+  const toDbTime = (value: string) =>
+    value.length === 5 ? `${value}:00` : value;
+
+  useEffect(() => {
+    setLuzInicio(toInputTime(acuarioSeleccionado.luz_inicio));
+    setLuzFinal(toInputTime(acuarioSeleccionado.luz_final));
+    setFiltroInicio(toInputTime(acuarioSeleccionado.filtro_inicio));
+    setFiltroFinal(toInputTime(acuarioSeleccionado.filtro_final));
+  }, [
+    acuarioSeleccionado.id,
+    acuarioSeleccionado.luz_inicio,
+    acuarioSeleccionado.luz_final,
+    acuarioSeleccionado.filtro_inicio,
+    acuarioSeleccionado.filtro_final,
+  ]);
 
   const toggleLuz = async () => {
     // Actualizar el estado local
@@ -36,6 +58,25 @@ export const Devices = () => {
       .eq("id", acuarioSeleccionado.id);
   };
 
+  const saveLuzProgramacion = async () => {
+    const luzInicioDb = toDbTime(luzInicio);
+    const luzFinalDb = toDbTime(luzFinal);
+
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      luz_inicio: luzInicioDb,
+      luz_final: luzFinalDb,
+    });
+
+    await supabase
+      .from("acuarios")
+      .update({
+        luz_inicio: luzInicioDb,
+        luz_final: luzFinalDb,
+      })
+      .eq("id", acuarioSeleccionado.id);
+  };
+
   const toggleFiltro = async () => {
     // Actualizar el estado local
     modificarAcuarioSeleccionado({
@@ -61,6 +102,25 @@ export const Devices = () => {
     await supabase
       .from("acuarios")
       .update({ filtro_programado: !acuarioSeleccionado.filtro_programado })
+      .eq("id", acuarioSeleccionado.id);
+  };
+
+  const saveFiltroProgramacion = async () => {
+    const filtroInicioDb = toDbTime(filtroInicio);
+    const filtroFinalDb = toDbTime(filtroFinal);
+
+    modificarAcuarioSeleccionado({
+      ...acuarioSeleccionado,
+      filtro_inicio: filtroInicioDb,
+      filtro_final: filtroFinalDb,
+    });
+
+    await supabase
+      .from("acuarios")
+      .update({
+        filtro_inicio: filtroInicioDb,
+        filtro_final: filtroFinalDb,
+      })
       .eq("id", acuarioSeleccionado.id);
   };
 
@@ -119,6 +179,27 @@ export const Devices = () => {
                   size="sm"
                 />
               </div>
+
+              {acuarioSeleccionado.luz_programada && (
+                <div className="flex gap-2 pt-3">
+                  <Input
+                    type="time"
+                    label="Inicio"
+                    value={luzInicio}
+                    onValueChange={setLuzInicio}
+                    onBlur={saveLuzProgramacion}
+                    className="flex-1 input-no-zoom"
+                  />
+                  <Input
+                    type="time"
+                    label="Final"
+                    value={luzFinal}
+                    onValueChange={setLuzFinal}
+                    onBlur={saveLuzProgramacion}
+                    className="flex-1 input-no-zoom"
+                  />
+                </div>
+              )}
             </CardBody>
           </Card>
         </motion.div>
@@ -145,7 +226,7 @@ export const Devices = () => {
                     <h3 className="font-medium">Filtro</h3>
                     <p className="text-xs text-foreground-500">
                       {acuarioSeleccionado.filtro_programado
-                        ? `Programado: ${acuarioSeleccionado.filtro_inicio} - ${acuarioSeleccionado.filtro_final}`
+                        ? `Programado: ${acuarioSeleccionado.filtro_inicio.slice(0, 5)} - ${acuarioSeleccionado.filtro_final.slice(0, 5)}`
                         : "Sin programación"}
                     </p>
                   </div>
@@ -171,6 +252,27 @@ export const Devices = () => {
                   size="sm"
                 />
               </div>
+
+              {acuarioSeleccionado.filtro_programado && (
+                <div className="flex gap-2 pt-3">
+                  <Input
+                    type="time"
+                    label="Inicio"
+                    value={filtroInicio}
+                    onValueChange={setFiltroInicio}
+                    onBlur={saveFiltroProgramacion}
+                    className="flex-1 input-no-zoom"
+                  />
+                  <Input
+                    type="time"
+                    label="Final"
+                    value={filtroFinal}
+                    onValueChange={setFiltroFinal}
+                    onBlur={saveFiltroProgramacion}
+                    className="flex-1 input-no-zoom"
+                  />
+                </div>
+              )}
             </CardBody>
           </Card>
         </motion.div>

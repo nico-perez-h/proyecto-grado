@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Card, CardBody, Switch, Tooltip } from "@heroui/react";
+import { Button, Card, CardBody, Switch } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import { useUserContext } from "../context/userContext";
@@ -10,7 +10,7 @@ interface DeviceControlProps {
   label: string;
   isActive: boolean;
   onToggle: () => void;
-  activeTime?: string;
+  scheduleText: string;
 }
 
 const DeviceControl: React.FC<DeviceControlProps> = ({
@@ -18,6 +18,7 @@ const DeviceControl: React.FC<DeviceControlProps> = ({
   label,
   isActive,
   onToggle,
+  scheduleText,
 }) => {
   return (
     <Card className={`device-control ${isActive ? "border-primary" : ""}`}>
@@ -35,9 +36,7 @@ const DeviceControl: React.FC<DeviceControlProps> = ({
             </div>
             <div>
               <p className="font-medium">{label}</p>
-              <p className="text-xs text-foreground-500">
-                {isActive ? `Activo` : "Inactivo"}
-              </p>
+              <p className="text-xs text-foreground-500">{scheduleText}</p>
             </div>
           </div>
           <Switch
@@ -114,6 +113,13 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
             label="Luz"
             isActive={acuarioSeleccionado.luz}
             onToggle={toggleLuz}
+            scheduleText={
+              acuarioSeleccionado.luz_programada
+                ? `Programado: ${acuarioSeleccionado.luz_inicio.slice(0, 5)} - ${acuarioSeleccionado.luz_final.slice(0, 5)}`
+                : acuarioSeleccionado.luz
+                  ? "Activo"
+                  : "Inactivo"
+            }
           />
         </motion.div>
 
@@ -127,6 +133,13 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
             label="Filtro"
             isActive={acuarioSeleccionado.filtro}
             onToggle={toggleFiltro}
+            scheduleText={
+              acuarioSeleccionado.filtro_programado
+                ? `Programado: ${acuarioSeleccionado.filtro_inicio.slice(0, 5)} - ${acuarioSeleccionado.filtro_final.slice(0, 5)}`
+                : acuarioSeleccionado.filtro
+                  ? "Activo"
+                  : "Inactivo"
+            }
           />
         </motion.div>
       </div>

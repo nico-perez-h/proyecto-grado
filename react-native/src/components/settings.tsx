@@ -184,7 +184,7 @@ export const Settings = ({ setSelected }: Props) => {
           </Card>
         </Tab>
 
-        <Tab key="notifications" title="Notificaciones">
+        {/* <Tab key="notifications" title="Notificaciones">
           <Card className="mt-4">
             <CardBody className="p-4 space-y-4">
               <div className="flex items-center justify-between">
@@ -201,7 +201,7 @@ export const Settings = ({ setSelected }: Props) => {
               </div>
             </CardBody>
           </Card>
-        </Tab>
+        </Tab> */}
 
         <Tab key="parameters" title="Parámetros">
           <Card className="mt-4">

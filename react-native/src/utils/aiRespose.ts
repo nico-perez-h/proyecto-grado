@@ -23,7 +23,7 @@ export const getAIResponse = async (
   }
 ) => {
   try {
-    const gptKey = "qq";
+    const gptKey = "";
     if (!gptKey) {
       throw new NotFoundError("No se ha encontrado la clave de GPT");
     }
